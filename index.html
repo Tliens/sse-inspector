@@ -142,6 +142,18 @@ textarea#body{width:100%;min-height:90px;resize:vertical;font-size:13px;font-fam
 
 .curlbox{margin-top:12px}
 .curlbox pre{background:var(--code-bg);color:#c9d8ee;border-radius:8px;padding:10px 12px;font-size:11.5px;overflow:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.hpanel{border:1px solid var(--border);border-radius:8px;margin-top:6px;background:var(--bg);max-height:230px;overflow:auto}
+.hitem{display:flex;gap:8px;align-items:center;padding:7px 10px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border)}
+.hitem:hover{background:var(--bg3)}
+.hitem:last-of-type{border-bottom:none}
+.hmethod{flex:none;font-weight:700;font-size:10.5px;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:4px;padding:1px 5px;min-width:38px;text-align:center}
+.hurl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg2)}
+.htime{flex:none;color:var(--fg3);font-size:11px}
+.hdel{flex:none;color:var(--fg3);width:22px;height:22px;border-radius:5px;font-size:12px}
+.hdel:hover{color:var(--red);background:var(--bg3)}
+.hclear{padding:6px 10px;text-align:right}
+.hempty{padding:14px;text-align:center;color:var(--fg3);font-size:12.5px}
+textarea#curlInput{width:100%;min-height:70px;resize:vertical;font-size:12px;font-family:"SF Mono",ui-monospace,Menlo,monospace}
 
 /* ===== Response panel ===== */
 .statusbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
@@ -270,15 +282,28 @@ footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;ali
             <option value="PATCH">PATCH</option>
             <option value="DELETE">DELETE</option>
           </select>
-          <input type="text" id="url" placeholder="https://example.com/events" spellcheck="false" list="historyList">
-          <datalist id="historyList"></datalist>
+          <input type="text" id="url" placeholder="https://example.com/events" spellcheck="false">
+          <button class="iconbtn" id="historyBtn" title="History" style="flex:none">🕘</button>
         </div>
-        <div class="hint"><span data-i18n="tryHint">Try the demo:</span> <button class="demo-btn" id="demoBtn">Wikimedia EventStreams</button></div>
+        <div id="historyPanel" class="hpanel" hidden></div>
+        <div class="hint"><span data-i18n="presetsLabel">Presets:</span>
+          <button class="demo-btn" data-preset="wikimedia">Wikimedia live</button> ·
+          <button class="demo-btn" data-preset="openai">OpenAI stream</button> ·
+          <button class="demo-btn" data-preset="anthropic">Anthropic stream</button>
+        </div>
       </div>
 
       <div class="field">
         <button class="mini" id="addHeaderBtn" data-i18n="addHeader">+ Add header</button>
         <div id="headers"></div>
+      </div>
+
+      <div class="field">
+        <button class="mini" id="curlImportBtn">⇩ <span data-i18n="curlImport">Import cURL</span></button>
+        <div id="curlImportBox" style="display:none;margin-top:6px">
+          <textarea id="curlInput" data-i18n-ph="curlPh" placeholder="Paste a cURL command here…" spellcheck="false"></textarea>
+          <div><button class="btn ghost" id="curlParseBtn" style="margin-top:6px"><span data-i18n="curlParse">Parse &amp; fill</span></button></div>
+        </div>
       </div>
 
       <div class="field" id="bodyField" style="display:none">
@@ -303,6 +328,7 @@ footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;ali
       <div class="row" style="margin-top:14px">
         <button class="btn primary" id="connectBtn">▶ <span data-i18n="connect">Connect</span></button>
         <button class="btn danger" id="abortBtn" disabled>■ <span data-i18n="abort">Stop</span></button>
+        <button class="btn ghost" id="shareBtn" title="Copy shareable link" style="flex:0 0 auto">🔗</button>
       </div>
 
       <div class="section-toggle" id="curlToggle"><span data-i18n="curlEquiv">Equivalent cURL</span><span class="chev">›</span></div>
@@ -651,7 +677,7 @@ const I18N = {
     heroSub:'Connect to any SSE endpoint with custom headers, method and body. Watch events arrive in real time, inspect the raw stream, and learn the protocol — all client-side, nothing leaves your machine.',
     pill1:'⚡ 100% client-side', pill2:'🔧 Custom headers & POST', pill3:'📖 Built-in SSE guide', pill4:'🆓 Free & open source',
     tabDebug:'🛠 Debugger', tabGuide:'📖 SSE Guide',
-    requestTitle:'Request', urlLabel:'Endpoint URL', tryHint:'Try the demo:', addHeader:'+ Add header', bodyLabel:'Request body',
+    requestTitle:'Request', urlLabel:'Endpoint URL', addHeader:'+ Add header', bodyLabel:'Request body',
     reconnectLabel:'Auto-reconnect delay (ms)', idleLabel:'Idle timeout (sec, 0 = off)', prettyJson:'Pretty-print JSON data',
     connect:'Connect', abort:'Stop', curlEquiv:'Equivalent cURL',
     stIdle:'Idle', stConnecting:'Connecting…', stOpen:'Connected', stClosed:'Closed', stReconnecting:'Reconnecting…', stError:'Error',
@@ -704,14 +730,17 @@ const I18N = {
     q4:'Is my data safe with this tool?', a4:'Yes. SSE Inspector is a single static HTML file — there is no backend. Your requests go directly from your browser to the endpoint you enter, and history/settings stay in your browser\'s localStorage. Nothing is logged or proxied anywhere.',
     q5:'Why did my event stream stop after a while?', a5:'Most likely an intermediary (load balancer, CDN, or proxy) timed out an idle connection. Keep the stream warm with comment heartbeats like ": ping\\n\\n" every 10–20 seconds, and rely on reconnection with Last-Event-ID for anything lost in between.',
     footPrivacy:'🔒 100% client-side — your requests never touch our servers (there are none).', footSrc:'View source on GitHub',
-    copied:'Copied ✓', cleared:'Cleared', demoLoaded:'Demo endpoint filled in', maxEvents:'Event log capped at 1000 (download for full log)',
+    copied:'Copied ✓', cleared:'Cleared', demoLoaded:'Preset loaded', maxEvents:'Event log capped at 1000 (download for full log)',
+    presetsLabel:'Presets:', curlImport:'Import cURL', curlPh:'Paste a cURL command here…', curlParse:'Parse & fill',
+    imported:'Imported from cURL ✓', importFailed:'Could not parse this cURL', shared:'Share link copied — config is embedded in the URL (mind your API keys!)',
+    emptyHist:'No history yet', clearHist:'Clear all',
   },
   zh: {
     heroTitle:'在浏览器里直接调试 <em>Server-Sent Events</em>',
     heroSub:'用自定义 Header、请求方法和请求体连接任意 SSE 端点。实时查看事件流、检查原始数据，并学习 SSE 协议 —— 全程纯客户端，数据不经过任何服务器。',
     pill1:'⚡ 纯客户端运行', pill2:'🔧 自定义 Header 与 POST', pill3:'📖 内置 SSE 指南', pill4:'🆓 免费开源',
     tabDebug:'🛠 调试器', tabGuide:'📖 SSE 指南',
-    requestTitle:'请求配置', urlLabel:'端点 URL', tryHint:'试试演示：', addHeader:'+ 添加 Header', bodyLabel:'请求体',
+    requestTitle:'请求配置', urlLabel:'端点 URL', addHeader:'+ 添加 Header', bodyLabel:'请求体',
     reconnectLabel:'自动重连延迟（毫秒）', idleLabel:'空闲超时（秒，0 = 不限制）', prettyJson:'格式化显示 JSON 数据',
     connect:'连接', abort:'停止', curlEquiv:'等效 cURL 命令',
     stIdle:'空闲', stConnecting:'连接中…', stOpen:'已连接', stClosed:'已关闭', stReconnecting:'重连中…', stError:'错误',
@@ -764,7 +793,10 @@ const I18N = {
     q4:'我的数据在这个工具里安全吗？', a4:'安全。SSE Inspector 是单个静态 HTML 文件 —— 没有后端。你的请求直接从浏览器发往你输入的端点，历史记录和设置保存在浏览器 localStorage 里。任何地方都不会记录或代理你的数据。',
     q5:'为什么事件流跑一段时间就停了？', a5:'大概率是中间设备（负载均衡、CDN 或代理）把空闲连接断开了。每 10–20 秒发一条注释心跳（如 ": ping\\n\\n"）保活，并配合重连时的 Last-Event-ID 补上中间丢失的数据。',
     footPrivacy:'🔒 纯客户端运行 —— 你的请求不会经过我们的服务器（因为我们根本没有服务器）。', footSrc:'在 GitHub 查看源码',
-    copied:'已复制 ✓', cleared:'已清空', demoLoaded:'已填入演示端点', maxEvents:'事件日志已达上限 1000 条（完整日志请下载）',
+    copied:'已复制 ✓', cleared:'已清空', demoLoaded:'预设已填入', maxEvents:'事件日志已达上限 1000 条（完整日志请下载）',
+    presetsLabel:'预设：', curlImport:'导入 cURL', curlPh:'把 cURL 命令粘贴到这里…', curlParse:'解析并填入',
+    imported:'已从 cURL 导入 ✓', importFailed:'无法解析这条 cURL', shared:'分享链接已复制 — 配置已编码进 URL（注意别泄露密钥！）',
+    emptyHist:'暂无历史记录', clearHist:'清空全部',
   }
 };
 
@@ -864,16 +896,110 @@ bodyTa.oninput=updateCurl;
 urlInput.oninput=updateCurl;
 
 const DEMO_URL='https://stream.wikimedia.org/v2/stream/recentchange';
-$('#demoBtn').onclick=()=>{
-  methodSel.value='GET'; methodSel.onchange();
-  headerRows=[{k:'Accept',v:'text/event-stream'}]; renderHeaders();
-  urlInput.value=DEMO_URL; updateCurl(); toast(t('demoLoaded'));
+const PRESETS={
+  wikimedia:{u:DEMO_URL,m:'GET',h:[['Accept','text/event-stream']],b:''},
+  openai:{u:'https://api.openai.com/v1/chat/completions',m:'POST',h:[['Authorization','Bearer $OPENAI_API_KEY'],['Content-Type','application/json']],
+    b:JSON.stringify({model:'gpt-4o-mini',stream:true,messages:[{role:'user',content:'Say hello in one sentence'}]},null,2)},
+  anthropic:{u:'https://api.anthropic.com/v1/messages',m:'POST',h:[['x-api-key','$ANTHROPIC_API_KEY'],['anthropic-version','2023-06-01'],['anthropic-dangerous-direct-browser-access','true'],['Content-Type','application/json']],
+    b:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:256,stream:true,messages:[{role:'user',content:'Say hello in one sentence'}]},null,2)}
+};
+function applyConfig(c){
+  if(!c) return;
+  if(c.u) urlInput.value=c.u;
+  methodSel.value=c.m||'GET';
+  headerRows=(c.h||[]).map(([k,v])=>({k,v}));
+  if(!headerRows.length) headerRows=[{k:'Accept',v:'text/event-stream'}];
+  bodyTa.value=c.b||'';
+  methodSel.onchange(); renderHeaders(); updateCurl();
+}
+document.querySelectorAll('[data-preset]').forEach(btn=>{
+  btn.onclick=()=>{ applyConfig(PRESETS[btn.dataset.preset]); toast(t('demoLoaded')); };
+});
+
+/* ===== cURL import ===== */
+function curlTokenize(s){
+  const toks=[]; let i=0;
+  while(i<s.length){
+    while(i<s.length && /\s/.test(s[i])) i++;
+    if(i>=s.length) break;
+    let tok='';
+    if(s[i]==="'"){ i++; while(i<s.length && s[i]!=="'"){ tok+=s[i++]; } i++; }
+    else if(s[i]==='"'){ i++; while(i<s.length && s[i]!=='"'){ if(s[i]==='\\' && i+1<s.length){ tok+=s[i+1]; i+=2; } else tok+=s[i++]; } i++; }
+    else if(s[i]==='$' && s[i+1]==="'"){ i+=2; while(i<s.length && s[i]!=="'"){ if(s[i]==='\\' && i+1<s.length){ const c=s[i+1]; tok+=({n:'\n',t:'\t',r:'\r'})[c] ?? c; i+=2; } else tok+=s[i++]; } i++; }
+    else { while(i<s.length && !/\s/.test(s[i])){ tok+=s[i++]; } }
+    toks.push(tok);
+  }
+  return toks;
+}
+const CURL_NO_ARG=new Set(['--compressed','-s','--silent','-k','--insecure','-L','--location','-N','--no-buffer','-f','--fail','-v','--verbose','-S','--show-error','-#','--progress-bar','--http1.0','--http1.1','--http2','--http2-prior-knowledge','-4','-6','--ipv4','--ipv6','--netrc','--no-keepalive','--keepalive','--tr-encoding','-g','--globoff','--path-as-is','--proxytunnel','--no-alpn']);
+const CURL_WITH_ARG=new Set(['--request','--header','--data','--data-raw','--data-binary','--data-urlencode','--data-ascii','--url','--user','--user-agent','--referer','--cookie','--form','--form-string','--output','--dump-header','--connect-timeout','--max-time','--retry','--resolve','--proxy','--cacert','--capath','--cert','--key','--retry-delay','--retry-max-time','-x']);
+function parseCurl(cmd){
+  const toks=curlTokenize(cmd.replace(/\\\r?\n/g,' ')).filter(Boolean);
+  let i=0;
+  if(/curl(\.exe)?$/i.test(toks[0]||'')) i=1;
+  const out={url:'',method:'',headers:[],body:'',auth:null};
+  for(;i<toks.length;i++){
+    const t=toks[i];
+    if(t==='-X'||t==='--request') out.method=(toks[++i]||'').toUpperCase();
+    else if(t==='-H'||t==='--header') out.headers.push(toks[++i]||'');
+    else if(t==='-d'||t==='--data'||t==='--data-raw'||t==='--data-binary'||t==='--data-urlencode'||t==='--data-ascii') out.body+=(out.body?'&':'')+(toks[++i]||'');
+    else if(t==='-u'||t==='--user') out.auth='Basic '+btoa(toks[++i]||'');
+    else if(t==='-A'||t==='--user-agent') out.headers.push('User-Agent: '+(toks[++i]||''));
+    else if(t==='-e'||t==='--referer') out.headers.push('Referer: '+(toks[++i]||''));
+    else if(t==='-b'||t==='--cookie') out.headers.push('Cookie: '+(toks[++i]||''));
+    else if(t==='-F'||t==='--form'||t==='--form-string') out.body+=(out.body?'&':'')+(toks[++i]||'');
+    else if(CURL_WITH_ARG.has(t)){ i++; }
+    else if(CURL_NO_ARG.has(t)){ /* flag only */ }
+    else if(t.startsWith('-')){ /* unknown flag: skip */ }
+    else if(!out.url) out.url=t;
+  }
+  if(!out.method) out.method = out.body ? 'POST' : 'GET';
+  out.headers=out.headers.map(h=>{const c=h.indexOf(':');return c===-1?null:[h.slice(0,c).trim(),h.slice(c+1).trim()];}).filter(Boolean);
+  return out;
+}
+function applyParsedCurl(p){
+  if(p.url) urlInput.value=p.url;
+  methodSel.value=p.method||'GET';
+  const hs=p.headers.map(([k,v])=>({k,v}));
+  if(p.body && !hs.some(h=>h.k.toLowerCase()==='content-type')) hs.push({k:'Content-Type',v:'application/x-www-form-urlencoded'});
+  if(p.auth) hs.push({k:'Authorization',v:p.auth});
+  headerRows=hs.length?hs:[{k:'Accept',v:'text/event-stream'}];
+  bodyTa.value=p.body||'';
+  methodSel.onchange(); renderHeaders(); updateCurl();
+}
+$('#curlImportBtn').onclick=()=>{const b=$('#curlImportBox');b.style.display=b.style.display==='none'?'block':'none';};
+$('#curlParseBtn').onclick=()=>{
+  const cmd=$('#curlInput').value.trim();
+  if(!cmd) return;
+  try{
+    const p=parseCurl(cmd);
+    if(!p.url && !p.headers.length && !p.body) throw new Error('empty');
+    applyParsedCurl(p); toast(t('imported'));
+  }catch{ toast(t('importFailed')); }
+};
+
+/* ===== share link ===== */
+const b64u={
+  enc:s=>btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),
+  dec:s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0)))
+};
+$('#shareBtn').onclick=async()=>{
+  syncHeaderRows();
+  try{
+    const u=new URL(location.href); u.hash=''; u.searchParams.set('s',b64u.enc(JSON.stringify(getConfig())));
+    await navigator.clipboard.writeText(u.toString());
+  }catch{}
+  toast(t('shared'));
 };
 
 function getHeaders(){
   const out={};
   headerRows.forEach(h=>{const k=h.k.trim(); if(k) out[k]=h.v.trim();});
   return out;
+}
+function getConfig(){
+  syncHeaderRows();
+  return {u:urlInput.value.trim(),m:methodSel.value,h:headerRows.filter(h=>h.k.trim()).map(h=>[h.k.trim(),h.v]),b:bodyTa.value};
 }
 function updateCurl(){
   const m=methodSel.value, u=urlInput.value||'<url>';
@@ -970,7 +1096,7 @@ async function connect(){
   let u; try{ u=new URL(url); }catch{ toast('Invalid URL'); return; }
   syncHeaderRows();
   resetLog();
-  saveHistory(url);
+  saveHistory();
   attempt=0;
   doConnect(u.toString());
 }
@@ -1158,21 +1284,54 @@ $('#downloadBtn').onclick=()=>{
 $('#clearBtn').onclick=()=>{resetLog();toast(t('cleared'));};
 
 /* history */
-function saveHistory(url){
-  let h=[]; try{h=JSON.parse(localStorage.getItem('sseins-history')||'[]');}catch{}
-  h=h.filter(x=>x!==url); h.unshift(url); h=h.slice(0,8);
+function loadHist(){
+  try{ return JSON.parse(localStorage.getItem('sseins-history')||'[]').map(x=>typeof x==='string'?{u:x,m:'GET',h:[],b:'',t:0}:x); }
+  catch{ return []; }
+}
+function saveHistory(){
+  let h=loadHist(); const c=getConfig();
+  if(!c.u) return;
+  h=h.filter(x=>!(x.u===c.u&&x.m===c.m));
+  h.unshift({...c,t:Date.now()});
+  h=h.slice(0,12);
   localStorage.setItem('sseins-history',JSON.stringify(h));
-  renderHistory();
 }
-function renderHistory(){
-  let h=[]; try{h=JSON.parse(localStorage.getItem('sseins-history')||'[]');}catch{}
-  $('#historyList').innerHTML=h.map(u=>`<option value="${escapeHtml(u)}">`).join('');
+function relTime(t){
+  const d=Date.now()-t;
+  if(d<60000) return '<1m';
+  if(d<3600000) return Math.floor(d/60000)+'m';
+  if(d<86400000) return Math.floor(d/3600000)+'h';
+  return Math.floor(d/86400000)+'d';
 }
-renderHistory();
+function renderHistoryPanel(){
+  const h=loadHist(); const el=$('#historyPanel');
+  if(!h.length){ el.innerHTML=`<div class="hempty">${t('emptyHist')}</div>`; return; }
+  el.innerHTML=h.map((x,i)=>`<div class="hitem" data-i="${i}"><span class="hmethod">${escapeHtml(x.m)}</span><span class="hurl">${escapeHtml(x.u)}</span><span class="htime">${x.t?relTime(x.t):''}</span><button class="hdel" data-d="${i}" title="Remove">✕</button></div>`).join('')+`<div class="hclear"><button class="mini" id="histClear">${t('clearHist')}</button></div>`;
+}
+$('#historyBtn').onclick=e=>{
+  e.stopPropagation();
+  const p=$('#historyPanel');
+  p.hidden=!p.hidden;
+  if(!p.hidden) renderHistoryPanel();
+};
+$('#historyPanel').onclick=e=>{
+  e.stopPropagation();
+  const d=e.target.closest('[data-d]');
+  if(d){ const h=loadHist(); h.splice(+d.dataset.d,1); localStorage.setItem('sseins-history',JSON.stringify(h)); renderHistoryPanel(); return; }
+  if(e.target.id==='histClear'){ localStorage.removeItem('sseins-history'); renderHistoryPanel(); return; }
+  const it=e.target.closest('.hitem');
+  if(it){ applyConfig(loadHist()[+it.dataset.i]); $('#historyPanel').hidden=true; }
+};
+document.addEventListener('click',e=>{
+  const p=$('#historyPanel');
+  if(!p.hidden && !e.target.closest('#historyPanel') && !e.target.closest('#historyBtn')) p.hidden=true;
+});
 
 /* ================= init ================= */
 document.querySelectorAll('.section-body').forEach(b=>{if(b.id!=='curlBody'&&b.id!=='respHeadersBody')b.classList.add('open');});
 renderHeaders();
+const shareParam=new URLSearchParams(location.search).get('s');
+if(shareParam){ try{ applyConfig(JSON.parse(b64u.dec(shareParam))); }catch{} }
 if(!urlInput.value){ urlInput.value=DEMO_URL; }
 updateCurl();
 const urlLang=new URLSearchParams(location.search).get('lang');
