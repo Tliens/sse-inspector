@@ -6,11 +6,16 @@
 <title>SSE Inspector — Free Online Server-Sent Events Debugger &amp; Tester</title>
 <meta name="description" content="Free online SSE (Server-Sent Events) debugging tool for developers. Connect to any SSE endpoint with custom headers, method and body, inspect events in real time, and learn the SSE protocol with a built-in guide. 100% client-side.">
 <meta name="keywords" content="SSE, Server-Sent Events, SSE tester, SSE debugger, event stream, online tool, developer tools">
-<link rel="canonical" href="https://Tliens.github.io/sse-inspector/">
+<link rel="canonical" href="https://tliens.github.io/sse-inspector/">
+<link rel="alternate" hreflang="x-default" href="https://tliens.github.io/sse-inspector/">
+<link rel="alternate" hreflang="en" href="https://tliens.github.io/sse-inspector/?lang=en">
+<link rel="alternate" hreflang="zh" href="https://tliens.github.io/sse-inspector/?lang=zh">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
 <meta property="og:title" content="SSE Inspector — Online SSE Debugger &amp; Tester">
 <meta property="og:description" content="Test and debug Server-Sent Events endpoints in your browser. Custom headers, POST support, live event timeline, and a full SSE protocol guide.">
-<meta property="og:url" content="https://Tliens.github.io/sse-inspector/">
+<meta property="og:url" content="https://tliens.github.io/sse-inspector/">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://tliens.github.io/sse-inspector/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1117'/%3E%3Cpath d='M7 20l5-6 4 4 5-8 4 5' stroke='%2334d399' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -19,11 +24,25 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "SSE Inspector",
-  "url": "https://Tliens.github.io/sse-inspector/",
+  "url": "https://tliens.github.io/sse-inspector/",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Any",
+  "inLanguage": ["en", "zh"],
   "description": "Free online debugger and tester for Server-Sent Events (SSE) endpoints, with custom headers, POST support and a built-in protocol guide.",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Does SSE work over HTTP/2?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — and it works better. HTTP/2 multiplexes many streams over one TCP connection, removing the browser's 6-connections-per-origin limit and the head-of-line blocking concerns of HTTP/1.1. SSE still requires HTTP/1.1-compatible text framing, which HTTP/2 handles fine." } },
+    { "@type": "Question", "name": "Can I send POST requests with SSE?", "acceptedAnswer": { "@type": "Answer", "text": "Not with the native EventSource API — it only does GET without custom headers. But SSE is just a streaming HTTP response, so you can consume it with fetch + ReadableStream and use any method, headers, or body." } },
+    { "@type": "Question", "name": "How do I debug an SSE endpoint that returns nothing?", "acceptedAnswer": { "@type": "Answer", "text": "Check four things: (1) the response Content-Type is exactly text/event-stream; (2) each event ends with a blank line; (3) no proxy or compression middleware is buffering the stream — add X-Accel-Buffering: no; (4) CORS: if the stream is cross-origin, the server must send Access-Control-Allow-Origin." } },
+    { "@type": "Question", "name": "Is my data safe with this tool?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. SSE Inspector is a single static HTML file — there is no backend. Your requests go directly from your browser to the endpoint you enter, and history/settings stay in your browser's localStorage. Nothing is logged or proxied anywhere." } },
+    { "@type": "Question", "name": "Why did my event stream stop after a while?", "acceptedAnswer": { "@type": "Answer", "text": "Most likely an intermediary (load balancer, CDN, or proxy) timed out an idle connection. Keep the stream warm with comment heartbeats like ': ping' every 10–20 seconds, and rely on reconnection with Last-Event-ID for anything lost in between." } }
+  ]
 }
 </script>
 <style>
@@ -752,9 +771,34 @@ const I18N = {
 const $=s=>document.querySelector(s);
 let lang='en';
 function t(k){return (I18N[lang]&&I18N[lang][k])||I18N.en[k]||k;}
-function setLang(l){
+const META = {
+  en: {
+    title:'SSE Inspector — Free Online Server-Sent Events Debugger & Tester',
+    desc:'Free online SSE (Server-Sent Events) debugging tool for developers. Connect to any SSE endpoint with custom headers, method and body, inspect events in real time, and learn the SSE protocol with a built-in guide. 100% client-side.',
+    ogT:'SSE Inspector — Online SSE Debugger & Tester',
+    ogD:'Test and debug Server-Sent Events endpoints in your browser. Custom headers, POST support, live event timeline, and a full SSE protocol guide.'
+  },
+  zh: {
+    title:'SSE Inspector — 在线 SSE (Server-Sent Events) 调试工具',
+    desc:'免费在线 SSE（Server-Sent Events）调试工具，面向开发者。用自定义 Header、请求方法和请求体连接任意 SSE 端点，实时查看事件流，并附完整 SSE 协议指南。纯本地运行。',
+    ogT:'SSE Inspector — 在线 SSE 调试与测试工具',
+    ogD:'在浏览器中直接测试和调试 Server-Sent Events 端点：自定义 Header、POST 支持、实时事件流，以及完整的 SSE 协议指南。'
+  }
+};
+function setLang(l, syncUrl = true){
   lang=l; document.documentElement.lang=l==='zh'?'zh-CN':'en';
-  document.title = l==='zh' ? 'SSE Inspector — 在线 SSE (Server-Sent Events) 调试工具' : 'SSE Inspector — Free Online Server-Sent Events Debugger & Tester';
+  const m=META[l]||META.en;
+  document.title = m.title;
+  const set=(sel,attr,val)=>{const el=document.querySelector(sel); if(el) el.setAttribute(attr,val);};
+  set('meta[name="description"]','content',m.desc);
+  set('meta[property="og:title"]','content',m.ogT);
+  set('meta[property="og:description"]','content',m.ogD);
+  set('meta[property="og:locale"]','content',l==='zh'?'zh_CN':'en_US');
+  if(syncUrl){
+    const u=new URL(location.href);
+    u.searchParams.set('lang',l);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const v=I18N[l][el.dataset.i18n]; if(v!=null) el.innerHTML=v;
   });
@@ -1131,7 +1175,9 @@ document.querySelectorAll('.section-body').forEach(b=>{if(b.id!=='curlBody'&&b.i
 renderHeaders();
 if(!urlInput.value){ urlInput.value=DEMO_URL; }
 updateCurl();
-setLang(localStorage.getItem('sseins-lang') || (navigator.language.startsWith('zh')?'zh':'en'));
+const urlLang=new URLSearchParams(location.search).get('lang');
+const initialLang=(urlLang==='zh'||urlLang==='en')?urlLang:(localStorage.getItem('sseins-lang')||(navigator.language.startsWith('zh')?'zh':'en'));
+setLang(initialLang,false);
 $('#langBtn').onclick=()=>setLang(lang==='en'?'zh':'en');
 addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();connect();}
