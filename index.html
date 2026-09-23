@@ -345,8 +345,9 @@ footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;ali
       <li><a href="#g-vs" data-i18n="toc3">SSE vs WebSocket vs polling</a></li>
       <li><a href="#g-client" data-i18n="toc4">Client-side: EventSource &amp; fetch</a></li>
       <li><a href="#g-server" data-i18n="toc5">Server-side examples</a></li>
-      <li><a href="#g-pitfalls" data-i18n="toc6">Common pitfalls</a></li>
-      <li><a href="#g-faq" data-i18n="toc7">FAQ</a></li>
+      <li><a href="#g-mobile" data-i18n="toc6">iOS &amp; Android examples</a></li>
+      <li><a href="#g-pitfalls" data-i18n="toc7">Common pitfalls</a></li>
+      <li><a href="#g-faq" data-i18n="toc8">FAQ</a></li>
     </ol>
   </div>
 
@@ -473,10 +474,124 @@ async def events():
             yield f"id: {n}\nevent: tick\ndata: {json.dumps({'n': n})}\n\n"
             await asyncio.sleep(1)
     return StreamingResponse(gen(), media_type="text/event-stream")</code></pre>
+  <h3>Go (net/http)</h3>
+  <pre><code>package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func events(w http.ResponseWriter, r *http.Request) {
+	flusher, ok := w.(http.Flusher)   // response writer must support streaming
+	if !ok {
+		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	for i := 1; ; i++ {
+		fmt.Fprintf(w, "id: %d\nevent: tick\ndata: {\"n\": %d}\n\n", i, i)
+		flusher.Flush()   // flush after every event, or the client sees nothing
+		time.Sleep(time.Second)
+	}
+}
+
+func main() {
+	http.HandleFunc("/events", events)
+	http.ListenAndServe(":8080", nil)
+}</code></pre>
   <h3 data-i18n="h5a">A minimal raw response</h3>
   <p data-i18n="p5a">Any server that can stream a response can speak SSE. The three essential headers are <code>Content-Type: text/event-stream</code>, <code>Cache-Control: no-cache</code> and (for HTTP/1.1) <code>Connection: keep-alive</code>. Then just write <code>data: …\n\n</code> and flush.</p>
 
-  <h2 id="g-pitfalls" data-i18n="h6">6. Common pitfalls</h2>
+  <h2 id="g-mobile" data-i18n="h6">6. Multi-platform examples</h2>
+  <p data-i18n="p6m">Web examples live in section 4 above; here is a complete minimal page plus native iOS and Android clients. All of them consume the same plain HTTP stream — and on every platform outside a browser, reconnection and <code>Last-Event-ID</code> handling are your responsibility.</p>
+
+  <h3>Web — a complete minimal page</h3>
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;ul id="log"&gt;&lt;/ul&gt;
+&lt;script&gt;
+  const es = new EventSource("/events");        // same-origin GET endpoint
+  es.onmessage = (e) =&gt; {
+    const li = document.createElement("li");
+    li.textContent = e.data;                    // e.lastEventId also available
+    document.getElementById("log").appendChild(li);
+  };
+  es.addEventListener("tick", (e) =&gt; console.log("named event:", e.data));
+  es.onerror = () =&gt; console.log("lost connection — browser retries automatically");
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h3>Swift — iOS (URLSession, iOS 15+)</h3>
+  <pre><code><span class="cmt">// No third-party dependency needed.</span>
+func connect() {
+    Task {
+        var req = URLRequest(url: URL(string: "https://example.com/events")!)
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        req.setValue("Bearer &lt;token&gt;", forHTTPHeaderField: "Authorization")  // custom headers OK
+        req.timeoutInterval = .infinity
+
+        do {
+            let (bytes, _) = try await URLSession.shared.bytes(for: req)
+            var block = ""
+            for try await line in bytes.lines {
+                if line.isEmpty {                          // blank line = event boundary
+                    let data = block.split(separator: "\n")
+                        .filter { $0.hasPrefix("data:") }
+                        .map { String($0.dropFirst(5)).drop(while: { $0 == " " }) }
+                        .joined(separator: "\n")
+                    if !data.isEmpty { print("event:", data) }
+                    block = ""
+                } else {
+                    block += line + "\n"                   // keep event:/id:/retry: lines too
+                }
+            }
+        } catch {
+            // reconnect manually; send the last id as "Last-Event-ID" if the server uses ids
+        }
+    }
+}</code></pre>
+
+  <h3>Kotlin — Android (OkHttp)</h3>
+  <pre><code><span class="cmt">// build.gradle: implementation("com.squareup.okhttp3:okhttp:4.12.0")</span>
+val request = Request.Builder()
+    .url("https://example.com/events")
+    .header("Accept", "text/event-stream")
+    .header("Authorization", "Bearer &lt;token&gt;")   // custom headers OK
+    .build()
+
+client.newCall(request).enqueue(object : Callback {
+    override fun onFailure(call: Call, e: IOException) { scheduleReconnect() }
+
+    override fun onResponse(call: Call, response: Response) {
+        response.use { resp -&gt;
+            val source = resp.body?.source() ?: return
+            var dataLines = mutableListOf&lt;String&gt;()
+            while (!call.isCanceled()) {
+                val line = source.readUtf8Line() ?: break    // null = stream closed
+                when {
+                    line.startsWith("data:") -&gt; dataLines += line.removePrefix("data:").trimStart()
+                    line.isEmpty() -&gt; {                      // blank line = event boundary
+                        if (dataLines.isNotEmpty()) {
+                            val data = dataLines.joinToString("\n")
+                            runOnUiThread { onEvent(data) }  // marshal to the main thread
+                        }
+                        dataLines = mutableListOf()
+                    }
+                }
+            }
+        }
+        scheduleReconnect()   // OkHttp won't reconnect for you
+    }
+})</code></pre>
+
+  <h2 id="g-pitfalls" data-i18n="h7">7. Common pitfalls</h2>
   <ul>
     <li data-i18n="p6a"><b>Proxy buffering.</b> Nginx buffers responses by default, so events arrive in bursts or not at all. Set <code>X-Accel-Buffering: no</code> on the response, or <code>proxy_buffering off;</code> for the location.</li>
     <li data-i18n="p6b"><b>Compression.</b> Don't gzip <code>text/event-stream</code> — buffering + compression will delay every event. SSE bodies are tiny anyway.</li>
@@ -488,7 +603,7 @@ async def events():
     <li data-i18n="p6h"><b>CORS.</b> A cross-origin stream needs <code>Access-Control-Allow-Origin</code> on the response, just like any fetch.</li>
   </ul>
 
-  <h2 id="g-faq" data-i18n="h7">7. FAQ</h2>
+  <h2 id="g-faq" data-i18n="h8">8. FAQ</h2>
   <details class="faq"><summary data-i18n="q1">Does SSE work over HTTP/2?</summary><div class="a" data-i18n="a1">Yes — and it works better. HTTP/2 multiplexes many streams over one TCP connection, removing the browser's 6-connections-per-origin limit and the head-of-line blocking concerns of HTTP/1.1. SSE still requires HTTP/1.1-compatible text framing, which HTTP/2 handles fine.</div></details>
   <details class="faq"><summary data-i18n="q2">Can I send POST requests with SSE?</summary><div class="a" data-i18n="a2">Not with the native EventSource API — it only does GET without custom headers. But SSE is just a streaming HTTP response, so you can consume it with fetch + ReadableStream and use any method, headers, or body. Try it in the Debugger tab: choose POST and add your headers.</div></details>
   <details class="faq"><summary data-i18n="q3">How do I debug an SSE endpoint that returns nothing?</summary><div class="a" data-i18n="a3">Check four things: (1) the response Content-Type is exactly text/event-stream; (2) each event ends with a blank line (\n\n); (3) no proxy or compression middleware is buffering the stream — add X-Accel-Buffering: no; (4) CORS: if the stream is cross-origin, the server must send Access-Control-Allow-Origin. This tool's "Response headers" panel shows all of them at a glance.</div></details>
@@ -526,8 +641,9 @@ const I18N = {
     respHeaders:'Response headers', emptyMsg:'No events yet. Enter an SSE endpoint URL on the left and hit Connect — or click the demo link to see a live stream instantly.',
     gTitle:'Server-Sent Events: A Practical Guide',
     gLead:'Everything a developer needs to know about SSE — the wire format, how it compares to WebSockets, working client and server code, and the pitfalls that bite everyone at least once.',
-    gToc:'Contents', toc1:'What is SSE?', toc2:'The wire format', toc3:'SSE vs WebSocket vs polling', toc4:'Client-side: EventSource & fetch', toc5:'Server-side examples', toc6:'Common pitfalls', toc7:'FAQ',
-    h1:'1. What is SSE?', h2:'2. The wire format', h3:'3. SSE vs WebSocket vs polling', h4:'4. Client-side: EventSource & fetch', h5:'5. Server-side examples', h6:'6. Common pitfalls', h7:'7. FAQ',
+    gToc:'Contents', toc1:'What is SSE?', toc2:'The wire format', toc3:'SSE vs WebSocket vs polling', toc4:'Client-side: EventSource & fetch', toc5:'Server-side examples', toc6:'Multi-platform examples', toc7:'Common pitfalls', toc8:'FAQ',
+    h1:'1. What is SSE?', h2:'2. The wire format', h3:'3. SSE vs WebSocket vs polling', h4:'4. Client-side: EventSource & fetch', h5:'5. Server-side examples', h6:'6. Multi-platform examples', h7:'7. Common pitfalls', h8:'8. FAQ',
+    p6m:'Web examples live in section 4 above; here is a complete minimal page plus native iOS and Android clients. All of them consume the same plain HTTP stream — and on every platform outside a browser, reconnection and <code>Last-Event-ID</code> handling are your responsibility.',
     p1a:'Server-Sent Events (SSE) is a standard for servers to push data to browsers over plain HTTP. The client makes a single GET request, the server responds with <code>Content-Type: text/event-stream</code> and simply <em>keeps writing</em>. The connection stays open indefinitely, and each "event" is a small block of text.',
     p1b:'SSE is a one-way street: server → client only. If the client needs to send data, it issues ordinary HTTP requests alongside. This sounds like a limitation, but for most push scenarios — notifications, live dashboards, AI/LLM token streaming — it is exactly what you want, and it is radically simpler than a bidirectional socket.',
     p1c:'<b>Native browser support</b> — the <code>EventSource</code> API has existed since 2006 and works everywhere.',
@@ -585,8 +701,9 @@ const I18N = {
     respHeaders:'响应头', emptyMsg:'还没有事件。在左侧输入 SSE 端点地址并点击「连接」，或点击演示链接立即查看实时事件流。',
     gTitle:'Server-Sent Events 实用指南',
     gLead:'关于 SSE 开发者需要知道的一切 —— 传输格式、与 WebSocket 的对比、可用的客户端与服务端代码，以及人人都踩过的那些坑。',
-    gToc:'目录', toc1:'SSE 是什么？', toc2:'传输格式', toc3:'SSE vs WebSocket vs 轮询', toc4:'客户端：EventSource 与 fetch', toc5:'服务端示例', toc6:'常见坑', toc7:'常见问题',
-    h1:'1. SSE 是什么？', h2:'2. 传输格式', h3:'3. SSE vs WebSocket vs 轮询', h4:'4. 客户端：EventSource 与 fetch', h5:'5. 服务端示例', h6:'6. 常见坑', h7:'7. 常见问题',
+    gToc:'目录', toc1:'SSE 是什么？', toc2:'传输格式', toc3:'SSE vs WebSocket vs 轮询', toc4:'客户端：EventSource 与 fetch', toc5:'服务端示例', toc6:'多端示例', toc7:'常见坑', toc8:'常见问题',
+    h1:'1. SSE 是什么？', h2:'2. 传输格式', h3:'3. SSE vs WebSocket vs 轮询', h4:'4. 客户端：EventSource 与 fetch', h5:'5. 服务端示例', h6:'6. 多端示例', h7:'7. 常见坑', h8:'8. 常见问题',
+    p6m:'Web 端示例见上文第 4 节；这里再给一个可直接运行的最小页面，以及 iOS、Android 原生客户端。它们消费的都是同一种普通 HTTP 流 —— 而浏览器之外的所有平台，重连与 <code>Last-Event-ID</code> 续传都需要自行处理。',
     p1a:'Server-Sent Events（SSE）是一种让服务器通过普通 HTTP 向浏览器推送数据的标准。客户端发起一次 GET 请求，服务器以 <code>Content-Type: text/event-stream</code> 响应并持续写入，连接长期保持打开，每个「事件」就是一小段文本。',
     p1b:'SSE 是单向通道：只有服务器 → 浏览器。客户端要发数据时，并行发起普通 HTTP 请求即可。这听起来像限制，但对大多数推送场景 —— 通知、实时大盘、AI/LLM 流式输出 —— 恰好够用，而且比双向 Socket 简单得多。',
     p1c:'<b>浏览器原生支持</b> —— <code>EventSource</code> API 早在 2006 年就有了，到处可用。',
