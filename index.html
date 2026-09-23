@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSE Inspector — Free Online Server-Sent Events Debugger &amp; Tester</title>
+<meta name="description" content="Free online SSE (Server-Sent Events) debugging tool for developers. Connect to any SSE endpoint with custom headers, method and body, inspect events in real time, and learn the SSE protocol with a built-in guide. 100% client-side.">
+<meta name="keywords" content="SSE, Server-Sent Events, SSE tester, SSE debugger, event stream, online tool, developer tools">
+<link rel="canonical" href="https://Tliens.github.io/sse-inspector/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SSE Inspector — Online SSE Debugger &amp; Tester">
+<meta property="og:description" content="Test and debug Server-Sent Events endpoints in your browser. Custom headers, POST support, live event timeline, and a full SSE protocol guide.">
+<meta property="og:url" content="https://Tliens.github.io/sse-inspector/">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://tliens.github.io/sse-inspector/og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1117'/%3E%3Cpath d='M7 20l5-6 4 4 5-8 4 5' stroke='%2334d399' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SSE Inspector",
+  "url": "https://Tliens.github.io/sse-inspector/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "description": "Free online debugger and tester for Server-Sent Events (SSE) endpoints, with custom headers, POST support and a built-in protocol guide.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+:root{
+  --bg:#0e1117; --bg2:#141a23; --bg3:#1b2330; --border:#28303f; --border2:#3a4557;
+  --fg:#e6edf3; --fg2:#9aa7b8; --fg3:#5c6a7e;
+  --accent:#34d399; --accent2:#10b981; --blue:#60a5fa; --amber:#fbbf24; --red:#f87171; --violet:#a78bfa;
+  --code-bg:#0a0d12; --shadow:0 8px 30px rgba(0,0,0,.35);
+}
+html[data-theme="light"]{
+  --bg:#f7f8fa; --bg2:#ffffff; --bg3:#eef1f5; --border:#dfe4ec; --border2:#c9d2de;
+  --fg:#1a2230; --fg2:#5b6779; --fg3:#8b97a8;
+  --accent:#059669; --accent2:#047857; --blue:#2563eb; --amber:#b45309; --red:#dc2626; --violet:#7c3aed;
+  --code-bg:#10141b; --shadow:0 8px 30px rgba(20,30,50,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;font-size:15px}
+code,pre,mono,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+::placeholder{color:var(--fg3)}
+
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+header.site{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+header.site .wrap{display:flex;align-items:center;gap:14px;height:58px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:.2px}
+.logo svg{flex:none}
+.logo .tag{font-size:11px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);padding:1px 7px;border-radius:99px}
+header .spacer{flex:1}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--fg2);font-size:13px;font-weight:700}
+.iconbtn:hover{color:var(--fg);border-color:var(--border2)}
+.gh-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--fg2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;background:var(--bg2)}
+.gh-link:hover{color:var(--fg);text-decoration:none;border-color:var(--border2)}
+
+.hero{padding:34px 0 6px;text-align:center}
+.hero h1{font-size:clamp(24px,4vw,34px);font-weight:800;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p.sub{color:var(--fg2);max-width:680px;margin:10px auto 0;font-size:15px}
+.hero .pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.pill{font-size:12.5px;color:var(--fg2);border:1px solid var(--border);background:var(--bg2);border-radius:99px;padding:4px 12px}
+
+.tabs{display:flex;gap:6px;justify-content:center;margin:26px 0 0;border-bottom:1px solid var(--border)}
+.tab{padding:9px 20px;font-size:14.5px;font-weight:600;color:var(--fg2);border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:8px 8px 0 0}
+.tab:hover{color:var(--fg)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
+
+/* ===== Debugger layout ===== */
+.dbg{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:20px 0 40px;align-items:start}
+@media(max-width:960px){.dbg{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.card h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--fg2);padding:14px 16px 0}
+.card .body{padding:12px 16px 16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--fg2);margin-bottom:5px}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.urlrow{display:flex;gap:8px}
+.urlrow input{flex:1;min-width:0}
+select#method{width:104px;flex:none}
+.hint{font-size:12px;color:var(--fg3);margin-top:4px}
+.demo-btn{font-size:12px;color:var(--blue);background:none;padding:0}
+.demo-btn:hover{text-decoration:underline}
+
+.section-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--fg2);border-top:1px solid var(--border)}
+.section-toggle .chev{transition:transform .18s}
+.section-toggle.open .chev{transform:rotate(90deg)}
+.section-body{display:none;padding:4px 16px 14px}
+.section-body.open{display:block}
+
+.hrow{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.hrow input{font-size:13px;padding:6px 9px}
+.hrow input.k{flex:2;min-width:0}.hrow input.v{flex:3;min-width:0}
+.hrow .del{color:var(--fg3);width:26px;height:26px;flex:none;border-radius:6px;font-size:15px}
+.hrow .del:hover{color:var(--red);background:var(--bg3)}
+.mini{font-size:12.5px;color:var(--blue);padding:3px 0;font-weight:600}
+.mini:hover{text-decoration:underline}
+textarea#body{width:100%;min-height:90px;resize:vertical;font-size:13px;font-family:"SF Mono",ui-monospace,Menlo,monospace}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt label{font-size:12px;font-weight:600;color:var(--fg2);display:block;margin-bottom:4px}
+.opt input,.opt select{width:100%;font-size:13px;padding:6px 8px}
+.check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--fg2);cursor:pointer;user-select:none}
+.check input{accent-color:var(--accent);width:15px;height:15px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:14.5px;border-radius:10px;padding:10px 18px;transition:filter .15s,opacity .15s}
+.btn.primary{background:var(--accent2);color:#fff;flex:1}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.danger{background:var(--red);color:#fff;flex:1}
+.btn.ghost{border:1px solid var(--border2);color:var(--fg2);font-size:13px;padding:7px 12px;font-weight:600}
+.btn.ghost:hover{color:var(--fg);border-color:var(--fg3)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.curlbox{margin-top:12px}
+.curlbox pre{background:var(--code-bg);color:#c9d8ee;border-radius:8px;padding:10px 12px;font-size:11.5px;overflow:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+
+/* ===== Response panel ===== */
+.statusbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.state{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--fg3);flex:none}
+.dot.connecting{background:var(--amber);animation:pulse 1s infinite}
+.dot.open{background:var(--accent);animation:pulse 2s infinite}
+.dot.error{background:var(--red)}
+@keyframes pulse{50%{opacity:.4}}
+.stat{color:var(--fg2)}
+.stat b{color:var(--fg);font-weight:650;font-variant-numeric:tabular-nums}
+.statusbar .spacer{flex:1}
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border)}
+.toolbar input.search{font-size:13px;padding:6px 10px;width:190px}
+.viewtoggle{display:flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+.viewtoggle button{font-size:12.5px;font-weight:600;padding:6px 12px;color:var(--fg2)}
+.viewtoggle button.active{background:var(--bg3);color:var(--fg)}
+.streamwrap{position:relative}
+#stream{height:520px;overflow-y:auto;padding:12px 16px;scroll-behavior:auto}
+#raw{display:none;height:520px;overflow:auto;padding:12px 16px;background:var(--code-bg);border-radius:0 0 13px 13px}
+#raw pre{font-size:12px;line-height:1.55;color:#9fb3cc;white-space:pre-wrap;word-break:break-all}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--fg3);text-align:center;gap:10px}
+.empty svg{opacity:.5}
+.empty p{font-size:14px;max-width:420px}
+.ev{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--bg);overflow:hidden;animation:evin .18s ease-out}
+@keyframes evin{from{opacity:0;transform:translateY(3px)}}
+.ev .head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:7px 11px;cursor:pointer;font-size:12.5px}
+.ev .head:hover{background:var(--bg3)}
+.ev .seq{color:var(--fg3);font-variant-numeric:tabular-nums;font-size:11.5px;width:44px;flex:none}
+.ev .ename{font-weight:700;color:var(--violet)}
+.ev .ename.default{color:var(--blue)}
+.badge{font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 6px;letter-spacing:.03em}
+.badge.id{color:var(--amber);background:color-mix(in srgb,var(--amber) 13%,transparent)}
+.badge.retry{color:var(--fg2);background:var(--bg3)}
+.badge.json{color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent)}
+.ev .t{margin-left:auto;color:var(--fg3);font-size:11.5px;font-variant-numeric:tabular-nums}
+.ev .detail{display:none;border-top:1px solid var(--border);padding:9px 12px;background:var(--bg2)}
+.ev.open .detail{display:block}
+.ev .detail pre{font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:var(--fg);max-height:300px;overflow:auto}
+.ev .dlabel{font-size:10.5px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.07em;margin:8px 0 3px}
+.ev .dlabel:first-child{margin-top:0}
+
+/* ===== Guide ===== */
+.guide{max-width:860px;margin:0 auto;padding:30px 0 60px}
+.guide h1{font-size:26px;margin-bottom:6px}
+.guide .lead{color:var(--fg2);margin-bottom:26px}
+.guide h2{font-size:20px;margin:38px 0 12px;padding-top:8px;border-top:1px solid var(--border)}
+.guide h3{font-size:15.5px;margin:22px 0 8px}
+.guide p{margin:10px 0;color:var(--fg)}
+.guide ul,.guide ol{margin:10px 0 10px 22px;color:var(--fg)}
+.guide li{margin:5px 0}
+.guide code{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.88em}
+.guide pre{background:var(--code-bg);border-radius:10px;padding:15px 17px;overflow-x:auto;margin:12px 0;line-height:1.6;border:1px solid var(--border)}
+.guide pre code{background:none;border:none;padding:0;color:#c9d8ee;font-size:13px}
+.guide .cmt{color:#5c6a7e}
+.guide table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.guide th,.guide td{border:1px solid var(--border);padding:8px 12px;text-align:left;vertical-align:top}
+.guide th{background:var(--bg3);font-size:13px}
+.guide td code{white-space:nowrap}
+.fmt{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:12px 0}
+.fmt .flabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--fg2);background:var(--bg3);padding:6px 12px}
+.toc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:18px 0}
+.toc b{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--fg2)}
+.toc ol{margin:8px 0 2px 20px;font-size:14px;columns:2}
+@media(max-width:640px){.toc ol{columns:1}}
+details.faq{border:1px solid var(--border);border-radius:10px;margin:8px 0;background:var(--bg2)}
+details.faq summary{cursor:pointer;font-weight:650;padding:12px 15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.faq summary::after{content:"+";color:var(--fg3);font-size:18px}
+details.faq[open] summary::after{content:"–"}
+details.faq .a{padding:0 15px 13px;color:var(--fg);font-size:14.5px}
+footer.site{border-top:1px solid var(--border);padding:22px 0 34px;color:var(--fg3);font-size:13px;text-align:center}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border2);color:var(--fg);padding:9px 18px;border-radius:99px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);transition:transform .25s;z-index:99;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="var(--bg3)"/><path d="M7 20l5-6 4 4 5-8 4 5" stroke="var(--accent)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      SSE Inspector <span class="tag">v1.0</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="langBtn" title="Switch language">中</button>
+    <button class="iconbtn" id="themeBtn" title="Toggle theme">🌙</button>
+    <a class="gh-link" href="https://github.com/Tliens/sse-inspector" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <h1 data-i18n="heroTitle">Debug <em>Server-Sent Events</em> right in your browser</h1>
+  <p class="sub" data-i18n="heroSub">Connect to any SSE endpoint with custom headers, method and body. Watch events arrive in real time, inspect the raw stream, and learn the protocol — all client-side, nothing leaves your machine.</p>
+  <div class="pills">
+    <span class="pill" data-i18n="pill1">⚡ 100% client-side</span>
+    <span class="pill" data-i18n="pill2">🔧 Custom headers &amp; POST</span>
+    <span class="pill" data-i18n="pill3">📖 Built-in SSE guide</span>
+    <span class="pill" data-i18n="pill4">🆓 Free &amp; open source</span>
+  </div>
+</div>
+
+<nav class="tabs wrap" role="tablist">
+  <button class="tab active" id="tab-debug" data-i18n="tabDebug">🛠 Debugger</button>
+  <button class="tab" id="tab-guide" data-i18n="tabGuide">📖 SSE Guide</button>
+</nav>
+
+<!-- ============ DEBUGGER ============ -->
+<section class="tabpanel active" id="panel-debug">
+<div class="dbg wrap">
+
+  <!-- Request config -->
+  <div class="card">
+    <h2 data-i18n="requestTitle">Request</h2>
+    <div class="body">
+      <div class="field">
+        <label for="url" data-i18n="urlLabel">Endpoint URL</label>
+        <div class="urlrow">
+          <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+          <input type="text" id="url" placeholder="https://example.com/events" spellcheck="false" list="historyList">
+          <datalist id="historyList"></datalist>
+        </div>
+        <div class="hint"><span data-i18n="tryHint">Try the demo:</span> <button class="demo-btn" id="demoBtn">Wikimedia EventStreams</button></div>
+      </div>
+
+      <div class="field">
+        <button class="mini" id="addHeaderBtn" data-i18n="addHeader">+ Add header</button>
+        <div id="headers"></div>
+      </div>
+
+      <div class="field" id="bodyField" style="display:none">
+        <label for="body" data-i18n="bodyLabel">Request body</label>
+        <textarea id="body" placeholder='{"prompt": "hello"}' spellcheck="false"></textarea>
+      </div>
+
+      <div class="field opts">
+        <div class="opt">
+          <label for="reconnectDelay" data-i18n="reconnectLabel">Auto-reconnect delay (ms)</label>
+          <input type="number" id="reconnectDelay" value="3000" min="0" step="500">
+        </div>
+        <div class="opt">
+          <label for="idleTimeout" data-i18n="idleLabel">Idle timeout (sec, 0 = off)</label>
+          <input type="number" id="idleTimeout" value="0" min="0" step="5">
+        </div>
+      </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="prettyJson" checked> <span data-i18n="prettyJson">Pretty-print JSON data</span></label>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="connectBtn">▶ <span data-i18n="connect">Connect</span></button>
+        <button class="btn danger" id="abortBtn" disabled>■ <span data-i18n="abort">Stop</span></button>
+      </div>
+
+      <div class="section-toggle" id="curlToggle"><span data-i18n="curlEquiv">Equivalent cURL</span><span class="chev">›</span></div>
+      <div class="section-body" id="curlBody"><div class="curlbox"><pre id="curlPre"></pre></div></div>
+    </div>
+  </div>
+
+  <!-- Response -->
+  <div class="card">
+    <div class="statusbar">
+      <span class="state"><span class="dot" id="stateDot"></span><span id="stateText" data-i18n="stIdle">Idle</span></span>
+      <span class="stat" id="stStatus" hidden><span data-i18n="stStatus">HTTP</span> <b id="statusCode">—</b></span>
+      <span class="stat"><span data-i18n="stEvents">Events</span> <b id="stEvents">0</b></span>
+      <span class="stat"><span data-i18n="stBytes">Bytes</span> <b id="stBytes">0</b></span>
+      <span class="stat"><span data-i18n="stElapsed">Elapsed</span> <b id="stElapsed">0.0s</b></span>
+      <span class="stat"><span data-i18n="stTtfb">TTFB</span> <b id="stTtfb">—</b></span>
+      <span class="stat"><span data-i18n="stRate">Rate</span> <b id="stRate">0/s</b></span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="copyBtn" data-i18n="copy">Copy</button>
+      <button class="btn ghost" id="downloadBtn" data-i18n="download">Download</button>
+      <button class="btn ghost" id="clearBtn" data-i18n="clear">Clear</button>
+    </div>
+    <div class="toolbar">
+      <div class="viewtoggle">
+        <button id="viewParsed" class="active" data-i18n="vParsed">Parsed</button>
+        <button id="viewRaw" data-i18n="vRaw">Raw</button>
+      </div>
+      <input type="text" class="search" id="search" placeholder="Filter events…" data-i18n-ph="filterPh">
+      <label class="check"><input type="checkbox" id="autoScroll" checked> <span data-i18n="autoScroll">Auto-scroll</span></label>
+      <button class="btn ghost" id="headersBtn" data-i18n="respHeaders">Response headers</button>
+    </div>
+    <div class="section-body" id="respHeadersBody" style="padding:10px 16px;border-bottom:1px solid var(--border)"><pre id="respHeadersPre" style="font-size:12px;color:var(--fg2);white-space:pre-wrap;word-break:break-all"></pre></div>
+    <div class="streamwrap">
+      <div id="stream">
+        <div class="empty" id="emptyState">
+          <svg width="44" height="44" viewBox="0 0 32 32" fill="none"><path d="M4 22l6-8 5 5 7-11 6 7" stroke="var(--fg3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p data-i18n="emptyMsg">No events yet. Enter an SSE endpoint URL on the left and hit Connect — or click the demo link to see a live stream instantly.</p>
+        </div>
+      </div>
+      <div id="raw"><pre id="rawPre"></pre></div>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<!-- ============ GUIDE ============ -->
+<section class="tabpanel" id="panel-guide">
+<div class="guide wrap" id="guideContent">
+
+  <h1 data-i18n="gTitle">Server-Sent Events: A Practical Guide</h1>
+  <p class="lead" data-i18n="gLead">Everything a developer needs to know about SSE — the wire format, how it compares to WebSockets, working client and server code, and the pitfalls that bite everyone at least once.</p>
+
+  <div class="toc">
+    <b data-i18n="gToc">Contents</b>
+    <ol>
+      <li><a href="#g-what" data-i18n="toc1">What is SSE?</a></li>
+      <li><a href="#g-format" data-i18n="toc2">The wire format</a></li>
+      <li><a href="#g-vs" data-i18n="toc3">SSE vs WebSocket vs polling</a></li>
+      <li><a href="#g-client" data-i18n="toc4">Client-side: EventSource &amp; fetch</a></li>
+      <li><a href="#g-server" data-i18n="toc5">Server-side examples</a></li>
+      <li><a href="#g-pitfalls" data-i18n="toc6">Common pitfalls</a></li>
+      <li><a href="#g-faq" data-i18n="toc7">FAQ</a></li>
+    </ol>
+  </div>
+
+  <h2 id="g-what" data-i18n="h1">1. What is SSE?</h2>
+  <p data-i18n="p1a">Server-Sent Events (SSE) is a standard for servers to push data to browsers over plain HTTP. The client makes a single GET request, the server responds with <code>Content-Type: text/event-stream</code> and simply <em>keeps writing</em>. The connection stays open indefinitely, and each "event" is a small block of text.</p>
+  <p data-i18n="p1b">SSE is a one-way street: server → client only. If the client needs to send data, it issues ordinary HTTP requests alongside. This sounds like a limitation, but for most push scenarios — notifications, live dashboards, AI/LLM token streaming — it is exactly what you want, and it is radically simpler than a bidirectional socket.</p>
+  <ul>
+    <li data-i18n="p1c"><b>Native browser support</b> — the <code>EventSource</code> API has existed since 2006 and works everywhere.</li>
+    <li data-i18n="p1d"><b>Automatic reconnection</b> — built into the browser, with a <code>Last-Event-ID</code> resume mechanism.</li>
+    <li data-i18n="p1e"><b>Just HTTP</b> — works through proxies, load balancers and CDNs; easy to authenticate with plain headers.</li>
+    <li data-i18n="p1f"><b>Text only</b> — binary payloads need a base64 encoding or a different transport.</li>
+  </ul>
+
+  <h2 id="g-format" data-i18n="h2">2. The wire format</h2>
+  <p data-i18n="p2a">An SSE stream is UTF-8 text. The response body is a sequence of events separated by blank lines. Each line inside an event is <code>field: value</code>. There are only four fields:</p>
+  <div class="fmt"><div class="flabel" data-i18n="f1">Minimal event</div><pre><code>data: hello world</code></pre></div>
+  <div class="fmt"><div class="flabel" data-i18n="f2">Named event with id</div><pre><code>event: user-joined
+id: 42
+data: {"name": "Alice"}</code></pre></div>
+  <div class="fmt"><div class="flabel" data-i18n="f3">Multi-line data</div><pre><code>data: first line
+data: second line
+
+</code></pre></div>
+  <ul>
+    <li><code>data</code> — <span data-i18n="p2b">the payload. Multiple <code>data:</code> lines are joined with <code>\n</code>. An event is dispatched when a blank line is reached.</span></li>
+    <li><code>event</code> — <span data-i18n="p2c">the event type, received by <code>addEventListener(type)</code>. Defaults to <code>message</code>.</span></li>
+    <li><code>id</code> — <span data-i18n="p2d">stored by the browser and sent back as the <code>Last-Event-ID</code> header after a reconnect, letting the server resume where it left off.</span></li>
+    <li><code>retry</code> — <span data-i18n="p2e">reconnection interval in milliseconds, a hint from the server.</span></li>
+    <li data-i18n="p2f">Lines starting with <code>:</code> are comments — commonly used as keep-alive heartbeats (<code>: ping</code>).</li>
+  </ul>
+  <h3 data-i18n="h2a">Rules that surprise people</h3>
+  <ul>
+    <li data-i18n="p2g">The space after the colon is optional; only <em>one</em> leading space is stripped. <code>data:foo</code> and <code>data: foo</code> are identical.</li>
+    <li data-i18n="p2h">Line endings may be <code>\n</code>, <code>\r\n</code> or <code>\r</code> — all are valid separators.</li>
+    <li data-i18n="p2i">An event without a blank line after it is never dispatched. If your last event doesn't arrive, you probably forgot the trailing <code>\n\n</code>.</li>
+  </ul>
+
+  <h2 id="g-vs" data-i18n="h3">3. SSE vs WebSocket vs polling</h2>
+  <table>
+    <thead><tr><th></th><th data-i18n="tSse">SSE</th><th>WebSocket</th><th data-i18n="tPoll">Long polling</th></tr></thead>
+    <tbody>
+      <tr><td data-i18n="tDir">Direction</td><td data-i18n="tDirSse">Server → client</td><td data-i18n="tDirWs">Bidirectional</td><td data-i18n="tDirPoll">Client pulls</td></tr>
+      <tr><td data-i18n="tProto">Protocol</td><td>HTTP/1.1+, text</td><td>ws:// custom, text + binary</td><td>HTTP</td></tr>
+      <tr><td data-i18n="tReconn">Auto-reconnect</td><td>✅ <span data-i18n="tReconnSse">built-in</span></td><td>❌ <span data-i18n="tManual">manual</span></td><td data-i18n="tReconnPoll">manual</td></tr>
+      <tr><td data-i18n="tInfra">Infrastructure</td><td data-i18n="tInfraSse">plain HTTP — proxies/CDN friendly</td><td data-i18n="tInfraWs">needs Upgrade support</td><td data-i18n="tInfraPoll">plain HTTP</td></tr>
+      <tr><td data-i18n="tAuth">Auth headers</td><td data-i18n="tAuthSse">easy (fetch), EventSource is limited</td><td>limited</td><td data-i18n="tEasy">easy</td></tr>
+      <tr><td data-i18n="tUse">Typical use</td><td data-i18n="tUseSse">feeds, notifications, LLM streaming</td><td data-i18n="tUseWs">chat, games, collaboration</td><td data-i18n="tUsePoll">legacy fallback</td></tr>
+    </tbody>
+  </table>
+  <p data-i18n="p3a">Rule of thumb: if data only flows from server to client, prefer SSE. Reach for WebSocket only when the client must push frequently and with low latency (typing indicators, game state).</p>
+
+  <h2 id="g-client" data-i18n="h4">4. Client-side: EventSource &amp; fetch</h2>
+  <h3>EventSource — the simple path</h3>
+  <pre><code><span class="cmt">// GET-only, no custom headers. Auto-reconnects for you.</span>
+const es = new EventSource("https://example.com/events");
+
+es.onmessage = (e) =&gt; console.log("message:", e.data);
+es.addEventListener("user-joined", (e) =&gt; console.log(e.data));
+
+es.onerror = () =&gt; console.log("connection lost; browser will retry");
+// es.readyState: 0 connecting, 1 open, 2 closed</code></pre>
+  <h3>fetch + ReadableStream — full control</h3>
+  <p data-i18n="p4a">When you need POST, custom headers (e.g. <code>Authorization: Bearer …</code>), or GET/POST SSE APIs like OpenAI's, consume the stream manually. This is exactly what the debugger on this page does:</p>
+  <pre><code><span class="cmt">// fetch-based SSE consumption with POST + headers</span>
+const resp = await fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
+  body: JSON.stringify({ prompt: "hello" }),
+  signal: controller.signal,
+});
+const reader = resp.body.getReader();
+const decoder = new TextDecoder();
+let buf = "";
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buf += decoder.decode(value, { stream: true });
+
+  <span class="cmt">// split on blank lines (\n\n) — see the format section</span>
+  let idx;
+  while ((idx = buf.indexOf("\n\n")) !== -1) {
+    const block = buf.slice(0, idx);
+    buf = buf.slice(idx + 2);
+    const data = block.split("\n")
+      .filter(l =&gt; l.startsWith("data:"))
+      .map(l =&gt; l.slice(5).trimStart())
+      .join("\n");
+    if (data) handleEvent(data);
+  }
+}</code></pre>
+  <p data-i18n="p4b">Trade-offs: you give up the browser's automatic reconnection and <code>Last-Event-ID</code> handling — re-implement them if the server sends ids. In exchange you get full control over method, headers and error handling.</p>
+
+  <h2 id="g-server" data-i18n="h5">5. Server-side examples</h2>
+  <h3>Node.js (Express)</h3>
+  <pre><code>app.get("/events", (req, res) =&gt; {
+  res.set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+  });
+  res.flushHeaders();
+
+  let n = 0;
+  const timer = setInterval(() =&gt; {
+    res.write(`id: ${++n}\nevent: tick\ndata: ${JSON.stringify({ n, t: Date.now() })}\n\n`);
+  }, 1000);
+
+  req.on("close", () =&gt; clearInterval(timer));
+});</code></pre>
+  <h3>Python (FastAPI)</h3>
+  <pre><code>from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+import asyncio, json
+
+app = FastAPI()
+
+@app.get("/events")
+async def events():
+    async def gen():
+        n = 0
+        while True:
+            n += 1
+            yield f"id: {n}\nevent: tick\ndata: {json.dumps({'n': n})}\n\n"
+            await asyncio.sleep(1)
+    return StreamingResponse(gen(), media_type="text/event-stream")</code></pre>
+  <h3 data-i18n="h5a">A minimal raw response</h3>
+  <p data-i18n="p5a">Any server that can stream a response can speak SSE. The three essential headers are <code>Content-Type: text/event-stream</code>, <code>Cache-Control: no-cache</code> and (for HTTP/1.1) <code>Connection: keep-alive</code>. Then just write <code>data: …\n\n</code> and flush.</p>
+
+  <h2 id="g-pitfalls" data-i18n="h6">6. Common pitfalls</h2>
+  <ul>
+    <li data-i18n="p6a"><b>Proxy buffering.</b> Nginx buffers responses by default, so events arrive in bursts or not at all. Set <code>X-Accel-Buffering: no</code> on the response, or <code>proxy_buffering off;</code> for the location.</li>
+    <li data-i18n="p6b"><b>Compression.</b> Don't gzip <code>text/event-stream</code> — buffering + compression will delay every event. SSE bodies are tiny anyway.</li>
+    <li data-i18n="p6c"><b>Missing flush.</b> Frameworks buffer writes. In Node call <code>res.flushHeaders()</code> and ensure compression middleware is bypassed; in Python ensure your WSGI/ASGI server actually streams.</li>
+    <li data-i18n="p6d"><b>Forgetting the blank line.</b> Events are only dispatched on <code>\n\n</code>. No trailing blank line = client sees nothing.</li>
+    <li data-i18n="p6e"><b>EventSource can't send headers.</b> Put auth in a query param or cookie, or switch to the fetch approach shown above.</li>
+    <li data-i18n="p6f"><b>HTTP/1.1 connection limit.</b> Browsers allow ~6 connections per origin. Many SSE tabs can exhaust them — HTTP/2 multiplexes over one connection and removes the limit.</li>
+    <li data-i18n="p6g"><b>Timeouts.</b> Load balancers often kill idle connections after 30–60s. Send a comment heartbeat (<code>: ping\n\n</code>) every ~15s.</li>
+    <li data-i18n="p6h"><b>CORS.</b> A cross-origin stream needs <code>Access-Control-Allow-Origin</code> on the response, just like any fetch.</li>
+  </ul>
+
+  <h2 id="g-faq" data-i18n="h7">7. FAQ</h2>
+  <details class="faq"><summary data-i18n="q1">Does SSE work over HTTP/2?</summary><div class="a" data-i18n="a1">Yes — and it works better. HTTP/2 multiplexes many streams over one TCP connection, removing the browser's 6-connections-per-origin limit and the head-of-line blocking concerns of HTTP/1.1. SSE still requires HTTP/1.1-compatible text framing, which HTTP/2 handles fine.</div></details>
+  <details class="faq"><summary data-i18n="q2">Can I send POST requests with SSE?</summary><div class="a" data-i18n="a2">Not with the native EventSource API — it only does GET without custom headers. But SSE is just a streaming HTTP response, so you can consume it with fetch + ReadableStream and use any method, headers, or body. Try it in the Debugger tab: choose POST and add your headers.</div></details>
+  <details class="faq"><summary data-i18n="q3">How do I debug an SSE endpoint that returns nothing?</summary><div class="a" data-i18n="a3">Check four things: (1) the response Content-Type is exactly text/event-stream; (2) each event ends with a blank line (\n\n); (3) no proxy or compression middleware is buffering the stream — add X-Accel-Buffering: no; (4) CORS: if the stream is cross-origin, the server must send Access-Control-Allow-Origin. This tool's "Response headers" panel shows all of them at a glance.</div></details>
+  <details class="faq"><summary data-i18n="q4">Is my data safe with this tool?</summary><div class="a" data-i18n="a4">Yes. SSE Inspector is a single static HTML file — there is no backend. Your requests go directly from your browser to the endpoint you enter, and history/settings stay in your browser's localStorage. Nothing is logged or proxied anywhere.</div></details>
+  <details class="faq"><summary data-i18n="q5">Why did my event stream stop after a while?</summary><div class="a" data-i18n="a5">Most likely an intermediary (load balancer, CDN, or proxy) timed out an idle connection. Keep the stream warm with comment heartbeats like ": ping\n\n" every 10–20 seconds, and rely on reconnection with Last-Event-ID for anything lost in between.</div></details>
+
+</div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <span data-i18n="footPrivacy">🔒 100% client-side — your requests never touch our servers (there are none).</span>
+    <span>·</span>
+    <a href="https://github.com/Tliens/sse-inspector" target="_blank" rel="noopener" data-i18n="footSrc">View source on GitHub</a>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+"use strict";
+/* ================= i18n ================= */
+const I18N = {
+  en: {
+    heroTitle:'Debug <em>Server-Sent Events</em> right in your browser',
+    heroSub:'Connect to any SSE endpoint with custom headers, method and body. Watch events arrive in real time, inspect the raw stream, and learn the protocol — all client-side, nothing leaves your machine.',
+    pill1:'⚡ 100% client-side', pill2:'🔧 Custom headers & POST', pill3:'📖 Built-in SSE guide', pill4:'🆓 Free & open source',
+    tabDebug:'🛠 Debugger', tabGuide:'📖 SSE Guide',
+    requestTitle:'Request', urlLabel:'Endpoint URL', tryHint:'Try the demo:', addHeader:'+ Add header', bodyLabel:'Request body',
+    reconnectLabel:'Auto-reconnect delay (ms)', idleLabel:'Idle timeout (sec, 0 = off)', prettyJson:'Pretty-print JSON data',
+    connect:'Connect', abort:'Stop', curlEquiv:'Equivalent cURL',
+    stIdle:'Idle', stConnecting:'Connecting…', stOpen:'Connected', stClosed:'Closed', stReconnecting:'Reconnecting…', stError:'Error',
+    stStatus:'HTTP', stEvents:'Events', stBytes:'Bytes', stElapsed:'Elapsed', stTtfb:'TTFB', stRate:'Rate',
+    copy:'Copy', download:'Download', clear:'Clear', vParsed:'Parsed', vRaw:'Raw', filterPh:'Filter events…', autoScroll:'Auto-scroll',
+    respHeaders:'Response headers', emptyMsg:'No events yet. Enter an SSE endpoint URL on the left and hit Connect — or click the demo link to see a live stream instantly.',
+    gTitle:'Server-Sent Events: A Practical Guide',
+    gLead:'Everything a developer needs to know about SSE — the wire format, how it compares to WebSockets, working client and server code, and the pitfalls that bite everyone at least once.',
+    gToc:'Contents', toc1:'What is SSE?', toc2:'The wire format', toc3:'SSE vs WebSocket vs polling', toc4:'Client-side: EventSource & fetch', toc5:'Server-side examples', toc6:'Common pitfalls', toc7:'FAQ',
+    h1:'1. What is SSE?', h2:'2. The wire format', h3:'3. SSE vs WebSocket vs polling', h4:'4. Client-side: EventSource & fetch', h5:'5. Server-side examples', h6:'6. Common pitfalls', h7:'7. FAQ',
+    p1a:'Server-Sent Events (SSE) is a standard for servers to push data to browsers over plain HTTP. The client makes a single GET request, the server responds with <code>Content-Type: text/event-stream</code> and simply <em>keeps writing</em>. The connection stays open indefinitely, and each "event" is a small block of text.',
+    p1b:'SSE is a one-way street: server → client only. If the client needs to send data, it issues ordinary HTTP requests alongside. This sounds like a limitation, but for most push scenarios — notifications, live dashboards, AI/LLM token streaming — it is exactly what you want, and it is radically simpler than a bidirectional socket.',
+    p1c:'<b>Native browser support</b> — the <code>EventSource</code> API has existed since 2006 and works everywhere.',
+    p1d:'<b>Automatic reconnection</b> — built into the browser, with a <code>Last-Event-ID</code> resume mechanism.',
+    p1e:'<b>Just HTTP</b> — works through proxies, load balancers and CDNs; easy to authenticate with plain headers.',
+    p1f:'<b>Text only</b> — binary payloads need a base64 encoding or a different transport.',
+    p2a:'An SSE stream is UTF-8 text. The response body is a sequence of events separated by blank lines. Each line inside an event is <code>field: value</code>. There are only four fields:',
+    f1:'Minimal event', f2:'Named event with id', f3:'Multi-line data',
+    p2b:'the payload. Multiple <code>data:</code> lines are joined with <code>\\n</code>. An event is dispatched when a blank line is reached.',
+    p2c:'the event type, received by <code>addEventListener(type)</code>. Defaults to <code>message</code>.',
+    p2d:'stored by the browser and sent back as the <code>Last-Event-ID</code> header after a reconnect, letting the server resume where it left off.',
+    p2e:'reconnection interval in milliseconds, a hint from the server.',
+    p2f:'Lines starting with <code>:</code> are comments — commonly used as keep-alive heartbeats (<code>: ping</code>).',
+    h2a:'Rules that surprise people',
+    p2g:'The space after the colon is optional; only <em>one</em> leading space is stripped. <code>data:foo</code> and <code>data: foo</code> are identical.',
+    p2h:'Line endings may be <code>\\n</code>, <code>\\r\\n</code> or <code>\\r</code> — all are valid separators.',
+    p2i:'An event without a blank line after it is never dispatched. If your last event doesn\'t arrive, you probably forgot the trailing <code>\\n\\n</code>.',
+    tSse:'SSE', tPoll:'Long polling', tDir:'Direction', tDirSse:'Server → client', tDirWs:'Bidirectional', tDirPoll:'Client pulls',
+    tProto:'Protocol', tReconn:'Auto-reconnect', tReconnSse:'built-in', tManual:'manual', tReconnPoll:'manual',
+    tInfra:'Infrastructure', tInfraSse:'plain HTTP — proxies/CDN friendly', tInfraWs:'needs Upgrade support', tInfraPoll:'plain HTTP',
+    tAuth:'Auth headers', tAuthSse:'easy (fetch), EventSource is limited', tEasy:'easy', tUse:'Typical use',
+    tUseSse:'feeds, notifications, LLM streaming', tUseWs:'chat, games, collaboration', tUsePoll:'legacy fallback',
+    p3a:'Rule of thumb: if data only flows from server to client, prefer SSE. Reach for WebSocket only when the client must push frequently and with low latency (typing indicators, game state).',
+    p4a:'When you need POST, custom headers (e.g. <code>Authorization: Bearer …</code>), or GET/POST SSE APIs like OpenAI\'s, consume the stream manually. This is exactly what the debugger on this page does:',
+    p4b:'Trade-offs: you give up the browser\'s automatic reconnection and <code>Last-Event-ID</code> handling — re-implement them if the server sends ids. In exchange you get full control over method, headers and error handling.',
+    h5a:'A minimal raw response',
+    p5a:'Any server that can stream a response can speak SSE. The three essential headers are <code>Content-Type: text/event-stream</code>, <code>Cache-Control: no-cache</code> and (for HTTP/1.1) <code>Connection: keep-alive</code>. Then just write <code>data: …\\n\\n</code> and flush.',
+    p6a:'<b>Proxy buffering.</b> Nginx buffers responses by default, so events arrive in bursts or not at all. Set <code>X-Accel-Buffering: no</code> on the response, or <code>proxy_buffering off;</code> for the location.',
+    p6b:'<b>Compression.</b> Don\'t gzip <code>text/event-stream</code> — buffering + compression will delay every event. SSE bodies are tiny anyway.',
+    p6c:'<b>Missing flush.</b> Frameworks buffer writes. In Node call <code>res.flushHeaders()</code> and ensure compression middleware is bypassed; in Python ensure your WSGI/ASGI server actually streams.',
+    p6d:'<b>Forgetting the blank line.</b> Events are only dispatched on <code>\\n\\n</code>. No trailing blank line = client sees nothing.',
+    p6e:'<b>EventSource can\'t send headers.</b> Put auth in a query param or cookie, or switch to the fetch approach shown above.',
+    p6f:'<b>HTTP/1.1 connection limit.</b> Browsers allow ~6 connections per origin. Many SSE tabs can exhaust them — HTTP/2 multiplexes over one connection and removes the limit.',
+    p6g:'<b>Timeouts.</b> Load balancers often kill idle connections after 30–60s. Send a comment heartbeat (<code>: ping\\n\\n</code>) every ~15s.',
+    p6h:'<b>CORS.</b> A cross-origin stream needs <code>Access-Control-Allow-Origin</code> on the response, just like any fetch.',
+    q1:'Does SSE work over HTTP/2?', a1:'Yes — and it works better. HTTP/2 multiplexes many streams over one TCP connection, removing the browser\'s 6-connections-per-origin limit and the head-of-line blocking concerns of HTTP/1.1. SSE still requires HTTP/1.1-compatible text framing, which HTTP/2 handles fine.',
+    q2:'Can I send POST requests with SSE?', a2:'Not with the native EventSource API — it only does GET without custom headers. But SSE is just a streaming HTTP response, so you can consume it with fetch + ReadableStream and use any method, headers, or body. Try it in the Debugger tab: choose POST and add your headers.',
+    q3:'How do I debug an SSE endpoint that returns nothing?', a3:'Check four things: (1) the response Content-Type is exactly text/event-stream; (2) each event ends with a blank line (\\n\\n); (3) no proxy or compression middleware is buffering the stream — add X-Accel-Buffering: no; (4) CORS: if the stream is cross-origin, the server must send Access-Control-Allow-Origin. This tool\'s "Response headers" panel shows all of them at a glance.',
+    q4:'Is my data safe with this tool?', a4:'Yes. SSE Inspector is a single static HTML file — there is no backend. Your requests go directly from your browser to the endpoint you enter, and history/settings stay in your browser\'s localStorage. Nothing is logged or proxied anywhere.',
+    q5:'Why did my event stream stop after a while?', a5:'Most likely an intermediary (load balancer, CDN, or proxy) timed out an idle connection. Keep the stream warm with comment heartbeats like ": ping\\n\\n" every 10–20 seconds, and rely on reconnection with Last-Event-ID for anything lost in between.',
+    footPrivacy:'🔒 100% client-side — your requests never touch our servers (there are none).', footSrc:'View source on GitHub',
+    copied:'Copied ✓', cleared:'Cleared', demoLoaded:'Demo endpoint filled in', maxEvents:'Event log capped at 1000 (download for full log)',
+  },
+  zh: {
+    heroTitle:'在浏览器里直接调试 <em>Server-Sent Events</em>',
+    heroSub:'用自定义 Header、请求方法和请求体连接任意 SSE 端点。实时查看事件流、检查原始数据，并学习 SSE 协议 —— 全程纯客户端，数据不经过任何服务器。',
+    pill1:'⚡ 纯客户端运行', pill2:'🔧 自定义 Header 与 POST', pill3:'📖 内置 SSE 指南', pill4:'🆓 免费开源',
+    tabDebug:'🛠 调试器', tabGuide:'📖 SSE 指南',
+    requestTitle:'请求配置', urlLabel:'端点 URL', tryHint:'试试演示：', addHeader:'+ 添加 Header', bodyLabel:'请求体',
+    reconnectLabel:'自动重连延迟（毫秒）', idleLabel:'空闲超时（秒，0 = 不限制）', prettyJson:'格式化显示 JSON 数据',
+    connect:'连接', abort:'停止', curlEquiv:'等效 cURL 命令',
+    stIdle:'空闲', stConnecting:'连接中…', stOpen:'已连接', stClosed:'已关闭', stReconnecting:'重连中…', stError:'错误',
+    stStatus:'HTTP', stEvents:'事件', stBytes:'字节', stElapsed:'耗时', stTtfb:'首字节', stRate:'速率',
+    copy:'复制', download:'下载', clear:'清空', vParsed:'解析视图', vRaw:'原始视图', filterPh:'筛选事件…', autoScroll:'自动滚动',
+    respHeaders:'响应头', emptyMsg:'还没有事件。在左侧输入 SSE 端点地址并点击「连接」，或点击演示链接立即查看实时事件流。',
+    gTitle:'Server-Sent Events 实用指南',
+    gLead:'关于 SSE 开发者需要知道的一切 —— 传输格式、与 WebSocket 的对比、可用的客户端与服务端代码，以及人人都踩过的那些坑。',
+    gToc:'目录', toc1:'SSE 是什么？', toc2:'传输格式', toc3:'SSE vs WebSocket vs 轮询', toc4:'客户端：EventSource 与 fetch', toc5:'服务端示例', toc6:'常见坑', toc7:'常见问题',
+    h1:'1. SSE 是什么？', h2:'2. 传输格式', h3:'3. SSE vs WebSocket vs 轮询', h4:'4. 客户端：EventSource 与 fetch', h5:'5. 服务端示例', h6:'6. 常见坑', h7:'7. 常见问题',
+    p1a:'Server-Sent Events（SSE）是一种让服务器通过普通 HTTP 向浏览器推送数据的标准。客户端发起一次 GET 请求，服务器以 <code>Content-Type: text/event-stream</code> 响应并持续写入，连接长期保持打开，每个「事件」就是一小段文本。',
+    p1b:'SSE 是单向通道：只有服务器 → 浏览器。客户端要发数据时，并行发起普通 HTTP 请求即可。这听起来像限制，但对大多数推送场景 —— 通知、实时大盘、AI/LLM 流式输出 —— 恰好够用，而且比双向 Socket 简单得多。',
+    p1c:'<b>浏览器原生支持</b> —— <code>EventSource</code> API 早在 2006 年就有了，到处可用。',
+    p1d:'<b>自动重连</b> —— 浏览器内置，配合 <code>Last-Event-ID</code> 断点续传机制。',
+    p1e:'<b>就是 HTTP</b> —— 代理、负载均衡、CDN 都能过，用普通 Header 鉴权也很容易。',
+    p1f:'<b>仅支持文本</b> —— 二进制内容需要 base64 编码或改用其他传输方式。',
+    p2a:'SSE 流是 UTF-8 文本。响应体由一系列以空行分隔的事件组成，事件内每行格式为 <code>field: value</code>。只有四种字段：',
+    f1:'最小事件', f2:'带名字和 id 的事件', f3:'多行 data',
+    p2b:'消息内容。多个 <code>data:</code> 行会用 <code>\\n</code> 拼接。出现空行时事件才会被派发。',
+    p2c:'事件类型，通过 <code>addEventListener(type)</code> 接收。默认为 <code>message</code>。',
+    p2d:'浏览器会记住它，断线重连时通过 <code>Last-Event-ID</code> 请求头回传，服务器据此续传。',
+    p2e:'重连间隔（毫秒），由服务器下发的提示。',
+    p2f:'以 <code>:</code> 开头的行是注释 —— 常用作保活心跳（<code>: ping</code>）。',
+    h2a:'容易踩的规则',
+    p2g:'冒号后的空格可省略，且只会去掉<em>一个</em>前导空格。<code>data:foo</code> 与 <code>data: foo</code> 完全等价。',
+    p2h:'换行可以是 <code>\\n</code>、<code>\\r\\n</code> 或 <code>\\r</code> —— 都是合法分隔符。',
+    p2i:'事件后面没有空行就永远不会被派发。如果最后一个事件收不到，多半是忘了结尾的 <code>\\n\\n</code>。',
+    tSse:'SSE', tPoll:'长轮询', tDir:'方向', tDirSse:'服务器 → 客户端', tDirWs:'双向', tDirPoll:'客户端拉取',
+    tProto:'协议', tReconn:'自动重连', tReconnSse:'内置', tManual:'需手动实现', tReconnPoll:'手动实现',
+    tInfra:'基础设施', tInfraSse:'普通 HTTP，代理/CDN 友好', tInfraWs:'需要 Upgrade 支持', tInfraPoll:'普通 HTTP',
+    tAuth:'鉴权 Header', tAuthSse:'容易（fetch 方式），EventSource 受限', tEasy:'容易', tUse:'典型场景',
+    tUseSse:'信息流、通知、LLM 流式输出', tUseWs:'聊天、游戏、协同编辑', tUsePoll:'旧系统兜底',
+    p3a:'经验法则：数据只需要从服务器流向客户端时，优先选 SSE。只有客户端需要频繁、低延迟地推送时（输入状态、游戏状态）才考虑 WebSocket。',
+    p4a:'当需要 POST、自定义 Header（如 <code>Authorization: Bearer …</code>），或调用 OpenAI 这类 POST SSE 接口时，需要手动消费流。本页调试器正是这样实现的：',
+    p4b:'代价是放弃了浏览器自动重连和 <code>Last-Event-ID</code> 续传 —— 如果服务器发送了 id，需要自己实现。换来的是对方法、Header 和错误处理的完全掌控。',
+    h5a:'最简原始响应',
+    p5a:'任何能流式输出响应的服务端都能讲 SSE。必需的三个响应头是 <code>Content-Type: text/event-stream</code>、<code>Cache-Control: no-cache</code>，以及（HTTP/1.1 下的）<code>Connection: keep-alive</code>。然后不断写入 <code>data: …\\n\\n</code> 并 flush 即可。',
+    p6a:'<b>代理缓冲。</b>Nginx 默认缓冲响应，事件会成批到达甚至完全收不到。在响应上加 <code>X-Accel-Buffering: no</code>，或对该 location 配置 <code>proxy_buffering off;</code>。',
+    p6b:'<b>压缩。</b>不要对 <code>text/event-stream</code> 开 gzip —— 缓冲加压缩会延迟每个事件。SSE 消息本来就很小。',
+    p6c:'<b>忘记 flush。</b>框架会缓冲写入。Node 中调用 <code>res.flushHeaders()</code> 并绕过压缩中间件；Python 中确保 WSGI/ASGI 服务器真的在流式输出。',
+    p6d:'<b>漏掉空行。</b>事件只在 <code>\\n\\n</code> 处派发。结尾没有空行 = 客户端什么都看不到。',
+    p6e:'<b>EventSource 发不了 Header。</b>把鉴权放到查询参数或 Cookie，或改用上文 fetch 方式。',
+    p6f:'<b>HTTP/1.1 连接数限制。</b>浏览器对同源只允许约 6 个连接，多开几个 SSE 标签页就会耗尽 —— HTTP/2 复用单连接，没有这个限制。',
+    p6g:'<b>超时断连。</b>负载均衡器常在空闲 30–60 秒后断开连接。每 ~15 秒发一条注释心跳（<code>: ping\\n\\n</code>）。',
+    p6h:'<b>CORS。</b>跨域的 SSE 流和其他 fetch 一样，需要响应带 <code>Access-Control-Allow-Origin</code>。',
+    q1:'SSE 支持 HTTP/2 吗？', a1:'支持，而且体验更好。HTTP/2 在一条 TCP 连接上多路复用多个流，消除了浏览器同源 6 连接的限制，也没有 HTTP/1.1 的队头阻塞问题。SSE 仍使用与 HTTP/1.1 兼容的文本分帧，HTTP/2 完全兼容。',
+    q2:'SSE 能发 POST 请求吗？', a2:'原生 EventSource API 不行 —— 只支持 GET 且不能带自定义 Header。但 SSE 本质上只是一个流式 HTTP 响应，用 fetch + ReadableStream 可以用任意方法、Header 和请求体来消费它。在「调试器」标签页试试：选 POST 再添加你的 Header。',
+    q3:'SSE 端点什么数据都收不到，怎么排查？', a3:'检查四点：(1) 响应 Content-Type 必须是 text/event-stream；(2) 每个事件必须以空行（\\n\\n）结尾；(3) 代理或压缩中间件是否在缓冲流 —— 加上 X-Accel-Buffering: no；(4) 跨域时响应必须带 Access-Control-Allow-Origin。本工具的「响应头」面板可以一眼看到这些。',
+    q4:'我的数据在这个工具里安全吗？', a4:'安全。SSE Inspector 是单个静态 HTML 文件 —— 没有后端。你的请求直接从浏览器发往你输入的端点，历史记录和设置保存在浏览器 localStorage 里。任何地方都不会记录或代理你的数据。',
+    q5:'为什么事件流跑一段时间就停了？', a5:'大概率是中间设备（负载均衡、CDN 或代理）把空闲连接断开了。每 10–20 秒发一条注释心跳（如 ": ping\\n\\n"）保活，并配合重连时的 Last-Event-ID 补上中间丢失的数据。',
+    footPrivacy:'🔒 纯客户端运行 —— 你的请求不会经过我们的服务器（因为我们根本没有服务器）。', footSrc:'在 GitHub 查看源码',
+    copied:'已复制 ✓', cleared:'已清空', demoLoaded:'已填入演示端点', maxEvents:'事件日志已达上限 1000 条（完整日志请下载）',
+  }
+};
+
+const $=s=>document.querySelector(s);
+let lang='en';
+function t(k){return (I18N[lang]&&I18N[lang][k])||I18N.en[k]||k;}
+function setLang(l){
+  lang=l; document.documentElement.lang=l==='zh'?'zh-CN':'en';
+  document.title = l==='zh' ? 'SSE Inspector — 在线 SSE (Server-Sent Events) 调试工具' : 'SSE Inspector — Free Online Server-Sent Events Debugger & Tester';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const v=I18N[l][el.dataset.i18n]; if(v!=null) el.innerHTML=v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=I18N[l][el.dataset.i18nPh]||'';});
+  $('#langBtn').textContent = l==='en'?'中':'EN';
+  localStorage.setItem('sseins-lang',l);
+  renderHeaders(); updateCurl(); setState(state,true);
+}
+
+/* ================= theme ================= */
+function setTheme(th){
+  document.documentElement.dataset.theme=th;
+  $('#themeBtn').textContent = th==='light' ? '☀️' : '🌙';
+  localStorage.setItem('sseins-theme',th);
+}
+setTheme(localStorage.getItem('sseins-theme') || (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+$('#themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light');
+
+/* ================= tabs ================= */
+$('#tab-debug').onclick=()=>{switchTab('debug')};
+$('#tab-guide').onclick=()=>{switchTab('guide')};
+function switchTab(name){
+  $('#tab-debug').classList.toggle('active',name==='debug');
+  $('#tab-guide').classList.toggle('active',name==='guide');
+  $('#panel-debug').classList.toggle('active',name==='debug');
+  $('#panel-guide').classList.toggle('active',name==='guide');
+  history.replaceState(null,'',name==='guide'?'#guide':'#debug');
+}
+if(location.hash==='#guide') switchTab('guide');
+
+/* ================= toast ================= */
+let toastTimer;
+function toast(msg){
+  const el=$('#toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+/* ================= request config ================= */
+const urlInput=$('#url'), methodSel=$('#method'), headersDiv=$('#headers'), bodyTa=$('#body'), bodyField=$('#bodyField');
+let headerRows=[{k:'Accept',v:'text/event-stream'},{k:'Content-Type',v:'application/json'}];
+
+function renderHeaders(){
+  headersDiv.innerHTML='';
+  headerRows.forEach((h,i)=>{
+    const row=document.createElement('div'); row.className='hrow';
+    row.innerHTML=`<input class="k" placeholder="Header" spellcheck="false"><input class="v" placeholder="Value" spellcheck="false"><button class="del" title="Remove">✕</button>`;
+    const [k,v]=row.querySelectorAll('input');
+    k.value=h.k; v.value=h.v;
+    k.oninput=()=>{headerRows[i].k=k.value;updateCurl();};
+    v.oninput=()=>{headerRows[i].v=v.value;updateCurl();};
+    row.querySelector('.del').onclick=()=>{headerRows.splice(i,1);renderHeaders();};
+    headersDiv.appendChild(row);
+  });
+}
+function syncHeaderRows(){
+  const rows=headersDiv.querySelectorAll('.hrow');
+  rows.forEach((row,i)=>{ if(headerRows[i]){headerRows[i].k=row.querySelector('.k').value;headerRows[i].v=row.querySelector('.v').value;} });
+}
+$('#addHeaderBtn').onclick=()=>{syncHeaderRows();headerRows.push({k:'',v:''});renderHeaders();headersDiv.lastChild.querySelector('.k').focus();};
+
+methodSel.onchange=()=>{bodyField.style.display=['GET','HEAD'].includes(methodSel.value)?'none':'block';updateCurl();};
+bodyTa.oninput=updateCurl;
+urlInput.oninput=updateCurl;
+
+const DEMO_URL='https://stream.wikimedia.org/v2/stream/recentchange';
+$('#demoBtn').onclick=()=>{
+  methodSel.value='GET'; methodSel.onchange();
+  headerRows=[{k:'Accept',v:'text/event-stream'}]; renderHeaders();
+  urlInput.value=DEMO_URL; updateCurl(); toast(t('demoLoaded'));
+};
+
+function getHeaders(){
+  const out={};
+  headerRows.forEach(h=>{const k=h.k.trim(); if(k) out[k]=h.v.trim();});
+  return out;
+}
+function updateCurl(){
+  const m=methodSel.value, u=urlInput.value||'<url>';
+  let s=`curl -N ${m==='GET'?'':'-X '+m+' '}`;
+  const hs=getHeaders();
+  for(const[k,v]of Object.entries(hs)) s+=`-H '${k}: ${v}' `;
+  const b=bodyTa.value.trim();
+  if(b && !['GET','HEAD'].includes(m)) s+=`-d '${b.replace(/'/g,"'\\''")}' `;
+  s+=`'${u}'`;
+  $('#curlPre').textContent=s;
+}
+$('#curlToggle').onclick=()=>{$('#curlToggle').classList.toggle('open');$('#curlBody').classList.toggle('open');};
+$('#headersBtn').onclick=e=>{$('#respHeadersBody').style.display=$('#respHeadersBody').style.display==='none'?'block':'none';};
+$('#respHeadersBody').style.display='none';
+
+/* ================= SSE engine ================= */
+let state='idle'; // idle|connecting|open|reconnecting|closed|error
+let controller=null, parser=null;
+let stats={events:0,bytes:0,start:0,firstByte:0,lastEvent:0};
+let log=[];           // {seq, time, delta, event, id, retry, data}
+let lastId='';
+let reconnectTimer=null, idleTimer=null, elapsedTimer=null, attempt=0;
+
+function setState(s,silent){
+  state=s;
+  const dot=$('#stateDot'), txt=$('#stateText');
+  dot.className='dot '+s;
+  const map={idle:'stIdle',connecting:'stConnecting',open:'stOpen',closed:'stClosed',reconnecting:'stReconnecting',error:'stError'};
+  txt.textContent=t(map[s]);
+  $('#connectBtn').disabled = (s==='connecting'||s==='open'||s==='reconnecting');
+  $('#abortBtn').disabled = !$('#connectBtn').disabled;
+}
+
+class SSEParser{
+  constructor(onEvent,onComment){
+    this.buf=''; this.onEvent=onEvent; this.onComment=onComment;
+    this.ev={data:[],event:'',retry:''};
+  }
+  push(text){
+    this.buf+=text;
+    // normalize newlines
+    this.buf=this.buf.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    let idx;
+    while((idx=this.buf.indexOf('\n'))!==-1){
+      const line=this.buf.slice(0,idx);
+      this.buf=this.buf.slice(idx+1);
+      this.line(line);
+    }
+  }
+  line(line){
+    if(line===''){ this.dispatch(); return; }
+    if(line.startsWith(':')){ if(this.onComment)this.onComment(line.slice(1)); return; }
+    let field,value;
+    const ci=line.indexOf(':');
+    if(ci===-1){ field=line; value=''; }
+    else{ field=line.slice(0,ci); value=line.slice(ci+1); if(value.startsWith(' ')) value=value.slice(1); }
+    if(field==='data') this.ev.data.push(value);
+    else if(field==='event') this.ev.event=value;
+    else if(field==='id'){ lastId=value; }
+    else if(field==='retry'){ const r=parseInt(value,10); if(!isNaN(r)) this.ev.retry=r; }
+  }
+  dispatch(){
+    if(this.ev.data.length===0){ this.ev={data:[],event:'',retry:''}; return; }
+    this.onEvent({event:this.ev.event||'message',data:this.ev.data.join('\n'),id:lastId,retry:this.ev.retry||null});
+    this.ev={data:[],event:'',retry:''};
+  }
+}
+
+function fmtBytes(n){
+  if(n<1024)return n+' B';
+  if(n<1048576)return (n/1024).toFixed(1)+' KB';
+  return (n/1048576).toFixed(2)+' MB';
+}
+function renderStats(){
+  $('#stEvents').textContent=stats.events;
+  $('#stBytes').textContent=fmtBytes(stats.bytes);
+  const el=(performance.now()-stats.start)/1000;
+  $('#stElapsed').textContent=el.toFixed(1)+'s';
+  $('#stTtfb').textContent=stats.firstByte?((stats.firstByte-stats.start)/1000).toFixed(2)+'s':'—';
+  const win=stats.lastEvent&&stats.lastEvent>performance.now()-5000 ? Math.min(el,5) : 5;
+  const rate=stats.lastEvent? (recentEvents.length/Math.max(win,0.5)) : 0;
+  $('#stRate').textContent=rate.toFixed(1)+'/s';
+}
+let recentEvents=[];
+
+function startElapsed(){
+  clearInterval(elapsedTimer);
+  elapsedTimer=setInterval(renderStats,500);
+}
+
+async function connect(){
+  const url=urlInput.value.trim();
+  if(!url){ urlInput.focus(); urlInput.style.borderColor='var(--red)'; setTimeout(()=>urlInput.style.borderColor='',1200); return; }
+  let u; try{ u=new URL(url); }catch{ toast('Invalid URL'); return; }
+  syncHeaderRows();
+  resetLog();
+  saveHistory(url);
+  attempt=0;
+  doConnect(u.toString());
+}
+
+async function doConnect(url){
+  clearTimeout(reconnectTimer); clearTimeout(idleTimer);
+  const method=methodSel.value;
+  const headers=getHeaders();
+  if(lastId) headers['Last-Event-ID']=lastId;
+  const body=(!['GET','HEAD'].includes(method)&&bodyTa.value.trim())?bodyTa.value:undefined;
+  controller=new AbortController();
+  setState(attempt===0?'connecting':'reconnecting');
+  stats={events:stats.events,bytes:stats.bytes,start:stats.start||performance.now(),firstByte:stats.firstByte,lastEvent:stats.lastEvent};
+  startElapsed();
+
+  try{
+    const resp=await fetch(url,{method,headers,body,signal:controller.signal,cache:'no-store'});
+    if(!resp.ok) throw new Error('HTTP '+resp.status+' '+resp.statusText);
+    setState('open');
+    $('#stStatus').hidden=false; $('#statusCode').textContent=resp.status+' '+resp.statusText;
+    // response headers panel
+    let hs='';
+    resp.headers.forEach((v,k)=>{hs+=k+': '+v+'\n';});
+    $('#respHeadersPre').textContent=hs;
+    if(!resp.body) throw new Error('Streaming not supported (no body)');
+    const reader=resp.body.getReader();
+    const decoder=new TextDecoder();
+    parser=new SSEParser(onEvent);
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      if(!stats.firstByte){ stats.firstByte=performance.now(); }
+      stats.bytes+=value.byteLength;
+      const text=decoder.decode(value,{stream:true});
+      onRaw(text);
+      parser.push(text);
+      bumpIdle();
+    }
+    // flush any remaining buffered event
+    parser.buf+='\n'; parser.line('');
+    finish('closed');
+  }catch(err){
+    if(err.name==='AbortError'){ finish('closed'); return; }
+    addSystemEvent(String(err.message||err));
+    if(+$('#reconnectDelay').value>0 && !controller._userAbort){
+      scheduleReconnect();
+    } else {
+      setState('error'); finishUI();
+    }
+  }
+}
+function scheduleReconnect(){
+  const d=+$('#reconnectDelay').value||3000;
+  setState('reconnecting');
+  addSystemEvent('⟳ reconnecting in '+d+'ms…');
+  reconnectTimer=setTimeout(()=>{attempt++;doConnect(urlInput.value.trim());},d);
+}
+function bumpIdle(){
+  clearTimeout(idleTimer);
+  const to=+$('#idleTimeout').value;
+  if(to>0&&controller){ idleTimer=setTimeout(()=>{addSystemEvent('⏱ idle timeout ('+to+'s) — aborting');abortConn();},to*1000); }
+}
+function abortConn(){
+  if(controller){controller._userAbort=true;controller.abort();}
+  clearTimeout(reconnectTimer);clearTimeout(idleTimer);
+}
+function finish(s){
+  clearInterval(elapsedTimer); renderStats();
+  setState(s); finishUI();
+}
+function finishUI(){
+  controller=null; parser=null;
+  $('#connectBtn').disabled=false; $('#abortBtn').disabled=true;
+}
+$('#connectBtn').onclick=()=>{ if(!$('#connectBtn').disabled) connect(); };
+$('#abortBtn').onclick=()=>abortConn();
+
+/* ================= event display ================= */
+const streamDiv=$('#stream'), rawPre=$('#rawPre'), emptyState=$('#emptyState');
+let displayMode='parsed';
+let rawBuf='';
+const MAX_LOG=1000, MAX_DOM=400, MAX_RAW=200000;
+
+function resetLog(){
+  log=[]; recentEvents=[]; rawBuf=''; lastId='';
+  stats={events:0,bytes:0,start:performance.now(),firstByte:0,lastEvent:0};
+  streamDiv.innerHTML=''; streamDiv.appendChild(emptyState);
+  emptyState.style.display='flex';
+  rawPre.textContent='';
+  $('#respHeadersPre').textContent='';
+  renderStats();
+}
+function onRaw(text){
+  rawBuf+=text;
+  if(rawBuf.length>MAX_RAW) rawBuf=rawBuf.slice(-MAX_RAW);
+  if(displayMode==='raw') rawPre.textContent=rawBuf;
+}
+function matchesFilter(ev){
+  const q=$('#search').value.trim().toLowerCase();
+  if(!q) return true;
+  return (ev.event+' '+ev.data+' '+(ev.id||'')).toLowerCase().includes(q);
+}
+function refreshVisible(){
+  streamDiv.querySelectorAll('.ev').forEach(el=>{
+    const i=+el.dataset.i;
+    el.style.display=matchesFilter(log[i])?'':'none';
+  });
+}
+$('#search').oninput=()=>refreshVisible();
+
+function onEvent(ev){
+  stats.events++;
+  const now=performance.now();
+  stats.lastEvent=now;
+  recentEvents.push(now);
+  while(recentEvents.length&&recentEvents[0]<now-5000) recentEvents.shift();
+  const item={seq:log.length+1,time:new Date(),delta:log.length?now-(log[log.length-1]._perf||stats.start):now-stats.start,_perf:now,event:ev.event,id:ev.id||'',retry:ev.retry,data:ev.data};
+  log.push(item);
+  if(log.length>MAX_LOG){ log.shift(); if(log.length===MAX_LOG) toast(t('maxEvents')); }
+  if(displayMode==='parsed') appendEventCard(item);
+  renderStats();
+}
+function prettyData(d){
+  if(!$('#prettyJson').checked) return d;
+  try{ return JSON.stringify(JSON.parse(d),null,2); }catch{ return d; }
+}
+function appendEventCard(item){
+  if(!matchesFilter(item)) return;
+  if(emptyState.style.display!=='none'){ emptyState.style.display='none'; streamDiv.innerHTML=''; }
+  const isJson=item.data.trim().startsWith('{')||item.data.trim().startsWith('[');
+  const div=document.createElement('div');
+  div.className='ev'; div.dataset.i=log.indexOf(item);
+  const timeStr=item.time.toTimeString().slice(0,8)+'.'+String(item.time.getMilliseconds()).padStart(3,'0');
+  div.innerHTML=`
+    <div class="head">
+      <span class="seq">#${item.seq}</span>
+      <span class="ename ${item.event==='message'?'default':''}">${escapeHtml(item.event)}</span>
+      ${item.id?`<span class="badge id">id: ${escapeHtml(item.id.length>40?item.id.slice(0,40)+'…':item.id)}</span>`:''}
+      ${item.retry?`<span class="badge retry">retry: ${item.retry}</span>`:''}
+      ${isJson?'<span class="badge json">JSON</span>':''}
+      <span class="t">+${(item.delta/1000).toFixed(2)}s · ${timeStr}</span>
+    </div>
+    <div class="detail">
+      <div class="dlabel">data</div>
+      <pre>${escapeHtml(prettyData(item.data))}</pre>
+    </div>`;
+  div.querySelector('.head').onclick=()=>div.classList.toggle('open');
+  streamDiv.appendChild(div);
+  while(streamDiv.children.length>MAX_DOM) streamDiv.removeChild(streamDiv.firstChild);
+  if($('#autoScroll').checked) streamDiv.scrollTop=streamDiv.scrollHeight;
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function addSystemEvent(msg){
+  rawBuf+=msg+'\n';
+  if(displayMode==='raw') rawPre.textContent=rawBuf;
+  const item={seq:log.length+1,time:new Date(),delta:0,_perf:performance.now(),event:'— system —',id:'',retry:null,data:msg};
+  log.push(item);
+  if(displayMode==='parsed') appendEventCard(item);
+}
+
+/* view toggle */
+$('#viewParsed').onclick=()=>{displayMode='parsed';$('#viewParsed').classList.add('active');$('#viewRaw').classList.remove('active');$('#stream').style.display='block';$('#raw').style.display='none';};
+$('#viewRaw').onclick=()=>{displayMode='raw';$('#viewRaw').classList.add('active');$('#viewParsed').classList.remove('active');$('#stream').style.display='none';$('#raw').style.display='block';rawPre.textContent=rawBuf;};
+
+/* toolbar actions */
+function logToText(){
+  return log.map(e=>{
+    let s=`#${e.seq} [${e.time.toISOString()}] event: ${e.event}`;
+    if(e.id)s+=` | id: ${e.id}`; if(e.retry)s+=` | retry: ${e.retry}`;
+    return s+'\n'+e.data;
+  }).join('\n\n');
+}
+$('#copyBtn').onclick=async()=>{
+  syncHeaderRows();
+  try{ await navigator.clipboard.writeText(logToText()); toast(t('copied')); }
+  catch{ toast(t('copied')); }
+};
+$('#downloadBtn').onclick=()=>{
+  const blob=new Blob([logToText()],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='sse-events-'+new Date().toISOString().replace(/[:.]/g,'-')+'.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$('#clearBtn').onclick=()=>{resetLog();toast(t('cleared'));};
+
+/* history */
+function saveHistory(url){
+  let h=[]; try{h=JSON.parse(localStorage.getItem('sseins-history')||'[]');}catch{}
+  h=h.filter(x=>x!==url); h.unshift(url); h=h.slice(0,8);
+  localStorage.setItem('sseins-history',JSON.stringify(h));
+  renderHistory();
+}
+function renderHistory(){
+  let h=[]; try{h=JSON.parse(localStorage.getItem('sseins-history')||'[]');}catch{}
+  $('#historyList').innerHTML=h.map(u=>`<option value="${escapeHtml(u)}">`).join('');
+}
+renderHistory();
+
+/* ================= init ================= */
+document.querySelectorAll('.section-body').forEach(b=>{if(b.id!=='curlBody'&&b.id!=='respHeadersBody')b.classList.add('open');});
+renderHeaders();
+if(!urlInput.value){ urlInput.value=DEMO_URL; }
+updateCurl();
+setLang(localStorage.getItem('sseins-lang') || (navigator.language.startsWith('zh')?'zh':'en'));
+$('#langBtn').onclick=()=>setLang(lang==='en'?'zh':'en');
+addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();connect();}
+});
+</script>
+</body>
+</html>
